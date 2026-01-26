@@ -33,8 +33,8 @@ export const Navbar: React.FC = () => {
     <nav
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-md' 
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-md'
           : 'bg-transparent'
       )}
     >
@@ -51,7 +51,7 @@ export const Navbar: React.FC = () => {
                 isScrolled ? 'text-white' : 'text-green-dark'
               )} />
             </div>
-            <div className="hidden sm:block">
+            <div className="block">
               <p className={cn(
                 'font-bold text-lg leading-tight transition-colors',
                 isScrolled ? 'text-foreground' : 'text-white'
@@ -79,7 +79,7 @@ export const Navbar: React.FC = () => {
                     ? isScrolled ? 'text-primary' : 'text-white'
                     : isScrolled ? 'text-foreground/70 hover:text-primary' : 'text-white/80 hover:text-white',
                   'after:absolute after:left-0 after:bottom-[-4px] after:h-0.5 after:transition-all after:duration-300',
-                  location.pathname === link.path 
+                  location.pathname === link.path
                     ? isScrolled ? 'after:w-full after:bg-primary' : 'after:w-full after:bg-white'
                     : 'after:w-0 after:bg-current hover:after:w-full'
                 )}
@@ -95,8 +95,8 @@ export const Navbar: React.FC = () => {
               to="/contact"
               className={cn(
                 'px-6 py-2.5 rounded-lg font-semibold transition-all duration-300',
-                isScrolled 
-                  ? 'bg-primary text-white hover:bg-green-medium' 
+                isScrolled
+                  ? 'bg-primary text-white hover:bg-green-medium'
                   : 'bg-white text-green-dark hover:bg-white/90'
               )}
             >

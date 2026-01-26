@@ -92,17 +92,17 @@ const About = () => {
                   Sajineesh Bikkina Construction Pvt. Ltd.
                 </h2>
                 <p className="text-muted-foreground mb-4">
-                  Established in 2011, Sajineesh Bikkina Construction Pvt. Ltd. has grown to become 
-                  a trusted A-Class Government Contractor, specializing in critical infrastructure 
+                  Established in 2011, Sajineesh Bikkina Construction Pvt. Ltd. has grown to become
+                  a trusted A-Class Government Contractor, specializing in critical infrastructure
                   projects across Odisha and neighboring states.
                 </p>
                 <p className="text-muted-foreground mb-4">
-                  With over 13 years of experience and ₹100+ crores worth of successfully executed 
-                  projects, we have built a reputation for quality, reliability, and timely delivery 
+                  With over 13 years of experience and ₹100+ crores worth of successfully executed
+                  projects, we have built a reputation for quality, reliability, and timely delivery
                   in bridge construction, road infrastructure, building construction, and irrigation works.
                 </p>
                 <p className="text-muted-foreground">
-                  Our expertise spans across various government schemes including Biju Setu Yojana, 
+                  Our expertise spans across various government schemes including Biju Setu Yojana,
                   PMGSY, and projects under R&B and Rural Works divisions.
                 </p>
               </div>
@@ -110,14 +110,14 @@ const About = () => {
 
             <ScrollReveal delay={200}>
               <div className="grid grid-cols-2 gap-4">
-                <FloatingImage 
-                  src={serviceBridge} 
-                  alt="Bridge Project" 
+                <FloatingImage
+                  src={serviceBridge}
+                  alt="Bridge Project"
                   className="rounded-xl aspect-video"
                 />
-                <FloatingImage 
-                  src={serviceRoad} 
-                  alt="Road Project" 
+                <FloatingImage
+                  src={serviceRoad}
+                  alt="Road Project"
                   className="rounded-xl mt-8 aspect-video"
                 />
               </div>
@@ -133,9 +133,9 @@ const About = () => {
             <ScrollReveal>
               <div className="relative">
                 <GlowCard className="aspect-[3/4] max-w-md mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-xl">
-                  <img 
-                    src={founderPortrait} 
-                    alt="Sajineesh Bikkina - Founder" 
+                  <img
+                    src="https://placehold.co/400x500?text=Founder+Photo"
+                    alt="Sajineesh Bikkina - Founder"
                     className="w-full h-full object-cover"
                   />
                 </GlowCard>
@@ -146,7 +146,7 @@ const About = () => {
               <div>
                 <span className="text-primary font-semibold">Leadership</span>
                 <h2 className="heading-section mt-2 mb-6">Founder's Profile</h2>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -157,7 +157,7 @@ const About = () => {
                       <p className="text-muted-foreground text-sm">Founder & Licensed Civil Contractor</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Target className="w-5 h-5 text-primary" />
@@ -167,7 +167,7 @@ const About = () => {
                       <p className="text-muted-foreground text-sm">SRM University</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Clock className="w-5 h-5 text-primary" />
@@ -180,8 +180,8 @@ const About = () => {
                 </div>
 
                 <p className="text-muted-foreground mt-6">
-                  With a vision to contribute to India's infrastructure development, Sajineesh Bikkina 
-                  has led the company to execute over ₹100 crores worth of projects, building bridges 
+                  With a vision to contribute to India's infrastructure development, Sajineesh Bikkina
+                  has led the company to execute over ₹100 crores worth of projects, building bridges
                   that connect communities and roads that drive economic growth.
                 </p>
               </div>
@@ -201,8 +201,8 @@ const About = () => {
                 </div>
                 <h3 className="heading-card text-white mb-4">Our Vision</h3>
                 <p className="text-white/80">
-                  To deliver durable, safe, and sustainable infrastructure that supports regional 
-                  and national development. We aim to be recognized as the most trusted infrastructure 
+                  To deliver durable, safe, and sustainable infrastructure that supports regional
+                  and national development. We aim to be recognized as the most trusted infrastructure
                   partner for government projects, setting benchmarks in quality and execution.
                 </p>
               </GlowCard>
@@ -215,8 +215,8 @@ const About = () => {
                 </div>
                 <h3 className="heading-card mb-4">Our Mission</h3>
                 <p className="text-muted-foreground">
-                  To execute government infrastructure projects with integrity, quality, and timely 
-                  delivery. We are committed to building infrastructure that improves lives, connects 
+                  To execute government infrastructure projects with integrity, quality, and timely
+                  delivery. We are committed to building infrastructure that improves lives, connects
                   communities, and contributes to India's development story.
                 </p>
               </GlowCard>
@@ -264,8 +264,8 @@ const About = () => {
               <p className="text-white/80 max-w-2xl mx-auto mb-8">
                 Looking for a trusted A-Class contractor for your next infrastructure project?
               </p>
-              <a 
-                href="/contact" 
+              <a
+                href="/contact"
                 className="btn-hero-primary inline-block"
               >
                 Contact Us Today
