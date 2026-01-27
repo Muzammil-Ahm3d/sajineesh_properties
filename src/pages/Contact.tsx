@@ -8,12 +8,12 @@ import bgInfrastructure from '@/assets/bg-infrastructure.jpg';
 
 const offices = [
   {
-    type: 'Corporate Office',
-    address: 'Tata Ariana, Kalinganagar, Tower-9, Bhubaneswar – 751029, Odisha',
+    type: 'Head Office',
+    address: 'Tata Ariana, Kalinganagar, Tower 9, Bhubaneswar – 751029, Odisha',
     icon: Building2,
   },
   {
-    type: 'Regional Office',
+    type: 'Branch Office',
     address: 'Samskruti Nilayam, SF-2, Opp. Tadigadapa 100 ft Road, Opp. Kamineni Hospital, Vijayawada – 520007, Andhra Pradesh',
     icon: MapPin,
   },
@@ -47,10 +47,10 @@ const Contact = () => {
             <ScrollReveal>
               <div>
                 <h2 className="heading-section mb-8">Our Offices</h2>
-                
+
                 <div className="space-y-6">
                   {offices.map((office) => (
-                    <GlowCard 
+                    <GlowCard
                       key={office.type}
                       className="bg-grey-lighter p-6"
                     >
@@ -70,21 +70,11 @@ const Contact = () => {
                 <div className="mt-8 space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-semibold">+91 XXXXX XXXXX</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                       <Mail className="w-6 h-6 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-semibold">info@sbconstruction.com</p>
+                      <p className="font-semibold">sajineeshconstructions@gmail.com</p>
                     </div>
                   </div>
 
@@ -105,7 +95,7 @@ const Contact = () => {
             <ScrollReveal delay={200}>
               <GlowCard className="bg-grey-lighter p-8">
                 <h2 className="heading-card mb-6">Send us a Message</h2>
-                
+
                 <form className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
@@ -185,19 +175,12 @@ const Contact = () => {
                 Ready to Start Your Project?
               </h2>
               <p className="text-white/80 max-w-2xl mx-auto mb-8">
-                Contact us today to discuss your infrastructure needs. Our team is ready 
+                Contact us today to discuss your infrastructure needs. Our team is ready
                 to help you with project planning, estimations, and execution.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a 
-                  href="tel:+91XXXXXXXXXX" 
-                  className="btn-hero-primary inline-flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-5 h-5" />
-                  Call Us Now
-                </a>
-                <a 
-                  href="mailto:info@sbconstruction.com" 
+                <a
+                  href="mailto:sajineeshconstructions@gmail.com"
                   className="btn-hero-secondary inline-flex items-center justify-center gap-2"
                 >
                   <Mail className="w-5 h-5" />

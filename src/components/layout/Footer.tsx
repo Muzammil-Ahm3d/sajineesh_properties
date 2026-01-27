@@ -10,16 +10,14 @@ export const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <Building2 className="w-7 h-7 text-green-dark" />
-              </div>
-              <div>
-                <p className="font-bold text-lg">Sajineesh Bikkina</p>
-                <p className="text-sm text-white/70">Construction Pvt. Ltd.</p>
-              </div>
+              <img
+                src="/src/assets/logo.png"
+                alt="Sajineesh Construction"
+                className="h-32 w-auto object-contain transition-transform duration-300 hover:scale-110"
+              />
             </div>
             <p className="text-white/80 text-sm leading-relaxed">
-              A-Class Government Contractor with 13+ years of experience in delivering 
+              A-Class Government Contractor with 13+ years of experience in delivering
               critical infrastructure across Odisha and beyond.
             </p>
             <div className="flex items-center gap-2 text-white/70">
@@ -80,18 +78,22 @@ export const Footer: React.FC = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 mt-0.5 text-white/70 flex-shrink-0" />
-                <span className="text-white/80 text-sm">
-                  Tata Ariana, Kalinganagar, Tower-9,<br />
-                  Bhubaneswar – 751029, Odisha
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-white/70" />
-                <span className="text-white/80 text-sm">+91 XXXXX XXXXX</span>
+                <div className="text-white/80 text-sm space-y-2">
+                  <p>
+                    <span className="font-semibold text-white/90">Head Office:</span><br />
+                    Tata Ariana, Kalinganagar, Tower 9,<br />
+                    Bhubaneswar – 751029, Odisha
+                  </p>
+                  <p className="pt-2 border-t border-white/10">
+                    <span className="font-semibold text-white/90">Branch Office:</span><br />
+                    Samskruti Nilayam, SF-2, Opp. Tadigadapa 100 ft Road,<br />
+                    Opp. Kamineni Hospital, Vijayawada – 520007, Andhra Pradesh
+                  </p>
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-white/70" />
-                <span className="text-white/80 text-sm">info@sbconstruction.com</span>
+                <span className="text-white/80 text-sm">sajineeshconstructions@gmail.com</span>
               </li>
             </ul>
           </div>

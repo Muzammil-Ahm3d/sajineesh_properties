@@ -15,21 +15,9 @@ interface ActionItem {
 
 const actions: ActionItem[] = [
   {
-    icon: MessageCircle,
-    label: 'WhatsApp',
-    href: `https://wa.me/${WHATSAPP_NUMBER}`,
-    bgColor: 'bg-[#25D366]',
-  },
-  {
-    icon: Phone,
-    label: 'Call',
-    href: `tel:${PHONE_NUMBER}`,
-    bgColor: 'bg-primary',
-  },
-  {
     icon: Mail,
     label: 'Email',
-    href: `mailto:${EMAIL}`,
+    href: `mailto:sajineeshconstructions@gmail.com`,
     bgColor: 'bg-blue-600',
   },
 ];
@@ -38,7 +26,7 @@ export const FloatingActionButton: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-center gap-3">
+    <div className="fixed bottom-6 right-4 z-[9999] flex flex-col items-center gap-3">
       {/* Action Items */}
       <div className="flex flex-col-reverse items-center gap-3">
         {actions.map((action, index) => (
@@ -79,7 +67,7 @@ export const FloatingActionButton: React.FC = () => {
         {isExpanded ? (
           <X className="w-6 h-6 transition-transform duration-300" />
         ) : (
-          <Phone className="w-6 h-6 transition-transform duration-300" />
+          <MessageCircle className="w-6 h-6 transition-transform duration-300" />
         )}
       </button>
     </div>

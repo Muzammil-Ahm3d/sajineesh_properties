@@ -32,38 +32,34 @@ export const Navbar: React.FC = () => {
   return (
     <nav
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-0 left-0 right-0 z-[999] transition-all duration-300',
         isScrolled
           ? 'bg-white/95 backdrop-blur-md shadow-md'
           : 'bg-transparent'
       )}
     >
-      <div className="container-wide section-padding py-4">
+      <div className="container-wide px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className={cn(
-              'w-12 h-12 rounded-lg flex items-center justify-center transition-colors',
-              isScrolled ? 'bg-primary' : 'bg-white'
-            )}>
-              <Building2 className={cn(
-                'w-7 h-7',
-                isScrolled ? 'text-white' : 'text-green-dark'
-              )} />
-            </div>
-            <div className="block">
-              <p className={cn(
-                'font-bold text-lg leading-tight transition-colors',
-                isScrolled ? 'text-foreground' : 'text-white'
+            <img
+              src="/src/assets/logo.png"
+              alt="Sajineesh Construction"
+              className="h-12 md:h-16 w-auto object-contain transition-transform duration-300 hover:scale-110"
+            />
+            <div className="flex flex-col max-w-[200px] sm:max-w-none">
+              <span className={cn(
+                "font-bold text-sm md:text-lg leading-tight uppercase tracking-tight truncate",
+                isScrolled ? "text-primary" : "text-white"
               )}>
-                Sajineesh Bikkina
-              </p>
-              <p className={cn(
-                'text-xs transition-colors',
-                isScrolled ? 'text-muted-foreground' : 'text-white/80'
+                Sajineesh
+              </span>
+              <span className={cn(
+                "font-medium text-xs md:text-sm tracking-wide truncate",
+                isScrolled ? "text-foreground" : "text-white/90"
               )}>
-                Construction Pvt. Ltd.
-              </p>
+                Construction Pvt Ltd
+              </span>
             </div>
           </Link>
 
@@ -108,9 +104,11 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              'lg:hidden p-2 rounded-lg transition-colors',
-              isScrolled ? 'text-foreground' : 'text-white'
+              'lg:hidden p-2 rounded-lg transition-colors flex-shrink-0',
+              isScrolled ? 'text-foreground hover:bg-black/5' : 'text-white hover:bg-white/10',
+              'bg-white/5 backdrop-blur-sm border border-white/10'
             )}
+            aria-label="Toggle menu"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

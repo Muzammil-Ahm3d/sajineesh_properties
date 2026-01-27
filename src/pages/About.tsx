@@ -132,11 +132,11 @@ const About = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <ScrollReveal>
               <div className="relative">
-                <GlowCard className="aspect-[3/4] max-w-md mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-xl">
+                <GlowCard className="w-full max-w-sm mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-xl">
                   <img
-                    src="https://placehold.co/400x500?text=Founder+Photo"
-                    alt="Sajineesh Bikkina - Founder"
-                    className="w-full h-full object-cover"
+                    src="/src/assets/logo.png"
+                    alt="Sajineesh Construction"
+                    className="w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-110"
                   />
                 </GlowCard>
               </div>
@@ -144,72 +144,50 @@ const About = () => {
 
             <ScrollReveal delay={200}>
               <div>
-                <span className="text-primary font-semibold">Leadership</span>
-                <h2 className="heading-section mt-2 mb-6">Founder's Profile</h2>
+                <span className="text-primary font-semibold">Who We Are</span>
+                <h2 className="heading-section mt-2 mb-6">Building the Future</h2>
 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Award className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Sajineesh Bikkina</h4>
-                      <p className="text-muted-foreground text-sm">Founder & Licensed Civil Contractor</p>
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Sajineesh Construction Pvt Ltd is a premier infrastructure development company
+                    dedicated to building the foundations of modern India. With a legacy of
+                    excellence and a future-focused approach, we specialize in constructing
+                    bridges, roads, and complex engineered structures that stand the test of time.
+                  </p>
 
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Target className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Engineering Graduate</h4>
-                      <p className="text-muted-foreground text-sm">SRM University</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">13+ Years Experience</h4>
-                      <p className="text-muted-foreground text-sm">In Government Infrastructure Projects</p>
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Our commitment goes beyond concrete and steel; it is about connecting people,
+                    powering economies, and delivering precision in every structure we build.
+                    We pride ourselves on our technical expertise, adherence to safety standards,
+                    and ability to deliver challenging projects on schedule.
+                  </p>
                 </div>
-
-                <p className="text-muted-foreground mt-6">
-                  With a vision to contribute to India's infrastructure development, Sajineesh Bikkina
-                  has led the company to execute over ₹100 crores worth of projects, building bridges
-                  that connect communities and roads that drive economic growth.
-                </p>
               </div>
             </ScrollReveal>
           </div>
-        </div>
-      </section>
+        </div >
+      </section >
 
       {/* Vision & Mission */}
-      <section className="section-padding">
+      < section className="section-padding" >
         <div className="container-wide">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             <ScrollReveal>
-              <GlowCard variant="dark" className="p-8 h-full">
-                <div className="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center mb-6">
-                  <Target className="w-8 h-8 text-white" />
+              <GlowCard className="p-8 h-full">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+                  <Target className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="heading-card text-white mb-4">Our Vision</h3>
-                <p className="text-white/80">
+                <h3 className="heading-card mb-4">Our Vision</h3>
+                <p className="text-muted-foreground">
                   To deliver durable, safe, and sustainable infrastructure that supports regional
                   and national development. We aim to be recognized as the most trusted infrastructure
-                  partner for government projects, setting benchmarks in quality and execution.
+                  partner for government projects.
                 </p>
               </GlowCard>
             </ScrollReveal>
 
             <ScrollReveal delay={200}>
-              <GlowCard className="bg-grey-lighter p-8 h-full">
+              <GlowCard className="p-8 h-full">
                 <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <Briefcase className="w-8 h-8 text-primary" />
                 </div>
@@ -217,16 +195,31 @@ const About = () => {
                 <p className="text-muted-foreground">
                   To execute government infrastructure projects with integrity, quality, and timely
                   delivery. We are committed to building infrastructure that improves lives, connects
-                  communities, and contributes to India's development story.
+                  communities, and contributes to India's development.
+                </p>
+              </GlowCard>
+            </ScrollReveal>
+
+            <ScrollReveal delay={400}>
+              <GlowCard className="p-8 h-full">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+                  <Award className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="heading-card mb-4">Our Values</h3>
+                <p className="text-muted-foreground">
+                  <strong>Quality:</strong> Precision in every structure.<br />
+                  <strong>Integrity:</strong> Honest and transparent dealings.<br />
+                  <strong>Safety:</strong> Zero compromise on safety standards.<br />
+                  <strong>Innovation:</strong> Adopting modern construction techniques.
                 </p>
               </GlowCard>
             </ScrollReveal>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Why Choose Us */}
-      <section className="section-padding bg-grey-lighter">
+      < section className="section-padding bg-grey-lighter" >
         <div className="container-wide">
           <ScrollReveal>
             <div className="text-center mb-12">
@@ -251,10 +244,10 @@ const About = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* CTA Section */}
-      <section className="section-padding">
+      < section className="section-padding" >
         <div className="container-wide">
           <ScrollReveal>
             <div className="bg-primary rounded-2xl p-8 md:p-12 text-center">
@@ -273,8 +266,8 @@ const About = () => {
             </div>
           </ScrollReveal>
         </div>
-      </section>
-    </div>
+      </section >
+    </div >
   );
 };
 

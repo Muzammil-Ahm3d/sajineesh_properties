@@ -7,6 +7,7 @@ import { ImageCard } from '@/components/ImageCard';
 import { TypingAnimation } from '@/components/TypingAnimation';
 import { PulsingBadge } from '@/components/PulsingBadge';
 import { FloatingImage } from '@/components/FloatingImage';
+import { Counter } from '@/components/Counter';
 import { GlowCard } from '@/components/GlowCard';
 
 // Import images
@@ -149,7 +150,10 @@ const Index = () => {
             {stats.map((stat, index) => (
               <ScrollReveal key={stat.label} delay={index * 100}>
                 <div className="text-center">
-                  <p className="text-4xl md:text-5xl font-bold text-white">{stat.number}</p>
+                  <Counter
+                    value={stat.number}
+                    className="text-4xl md:text-5xl font-bold text-white block"
+                  />
                   <p className="text-white/80 mt-2">{stat.label}</p>
                 </div>
               </ScrollReveal>
@@ -327,12 +331,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Vision & Mission */}
+      {/* Vision, Mission & Values */}
       <section className="section-padding">
         <div className="container-wide">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             <ScrollReveal>
-              <GlowCard className="bg-grey-lighter p-8 h-full">
+              <GlowCard className="p-8 h-full">
                 <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -348,7 +352,7 @@ const Index = () => {
             </ScrollReveal>
 
             <ScrollReveal delay={200}>
-              <GlowCard className="bg-grey-lighter p-8 h-full">
+              <GlowCard className="p-8 h-full">
                 <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -359,6 +363,22 @@ const Index = () => {
                   To execute government infrastructure projects with integrity, quality, and timely delivery,
                   ensuring every project contributes to the development of communities we serve.
                 </p>
+              </GlowCard>
+            </ScrollReveal>
+
+            <ScrollReveal delay={400}>
+              <GlowCard className="p-8 h-full">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+                  <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                </div>
+                <h3 className="heading-card mb-4">Our Values</h3>
+                <ul className="text-muted-foreground space-y-2">
+                  <li>• <strong>Quality:</strong> Precision in execution</li>
+                  <li>• <strong>Integrity:</strong> Trusted partnerships</li>
+                  <li>• <strong>Safety:</strong> Uncompromised standards</li>
+                </ul>
               </GlowCard>
             </ScrollReveal>
           </div>

@@ -7,19 +7,17 @@ interface GlowCardProps {
   variant?: 'default' | 'dark';
 }
 
-export const GlowCard: React.FC<GlowCardProps> = ({ 
-  children, 
+export const GlowCard: React.FC<GlowCardProps> = ({
+  children,
   className,
-  variant = 'default' 
+  variant = 'default'
 }) => {
   return (
-    <div 
+    <div
       className={cn(
         'rounded-xl transition-all duration-300',
-        'border border-white/15',
-        'hover:border-neon-glow hover:shadow-neon',
-        variant === 'dark' && 'bg-green-dark text-white',
-        variant === 'default' && 'bg-card',
+        'border border-border/50 bg-gray-50/80 backdrop-blur-sm',
+        'hover:border-neon-glow hover:shadow-neon hover:-translate-y-1',
         className
       )}
     >
