@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import logo from '@/assets/logo.png';
+
 const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'About Us', path: '/about' },
@@ -43,7 +45,7 @@ export const Navbar: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/src/assets/logo.png"
+              src={logo}
               alt="Sajineesh Construction"
               className="h-12 md:h-16 w-auto object-contain transition-transform duration-300 hover:scale-110"
             />

@@ -11,6 +11,7 @@ import serviceRoad from '@/assets/service-road.jpg';
 import serviceBuilding from '@/assets/service-building.jpg';
 import founderPortrait from '@/assets/founder-portrait.jpg';
 import bgInfrastructure from '@/assets/bg-infrastructure.jpg';
+import logo from '@/assets/logo.png';
 
 const achievements = [
   { icon: Award, label: 'A-Class Contractor', value: 'Licensed' },
@@ -134,7 +135,7 @@ const About = () => {
               <div className="relative">
                 <GlowCard className="w-full max-w-sm mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-xl">
                   <img
-                    src="/src/assets/logo.png"
+                    src={logo}
                     alt="Sajineesh Construction"
                     className="w-full h-full object-contain p-4 transition-transform duration-500 hover:scale-110"
                   />

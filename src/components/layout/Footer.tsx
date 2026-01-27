@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <img
-                src="/src/assets/logo.png"
+                src={logo}
                 alt="Sajineesh Construction"
                 className="h-32 w-auto object-contain transition-transform duration-300 hover:scale-110"
               />
