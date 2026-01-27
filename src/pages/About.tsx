@@ -93,7 +93,7 @@ const About = () => {
                   Sajineesh Construction Pvt. Ltd.
                 </h2>
                 <p className="text-muted-foreground mb-4">
-                  Sajineesh Bikkina entered the construction industry in 2011 at a young age. He began his career as a site supervisor, gaining hands-on experience in project execution and site management.
+                  Sajineesh Bikkina completed his engineering at SRM University and entered the construction industry in 2011 at a young age. He began his career as a site supervisor, gaining hands-on experience in project execution and site management.
                 </p>
                 <p className="text-muted-foreground mb-4">
                   Over the years, he progressed to working as a subcontractor and later established himself as an independent contractor.

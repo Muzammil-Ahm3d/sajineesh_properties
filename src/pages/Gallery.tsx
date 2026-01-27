@@ -1,0 +1,129 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { projectsData } from '@/data/projects';
+import { ScrollReveal } from '@/components/ScrollReveal';
+import { ParallaxBackground } from '@/components/ParallaxBackground';
+import { GlowCard } from '@/components/GlowCard';
+import { MapPin, Play, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import bgInfrastructure from '@/assets/bg-infrastructure.jpg';
+
+const categories = ['All', 'Ongoing', 'Completed', 'Videos'];
+
+const Gallery = () => {
+    const [activeFilter, setActiveFilter] = useState('All');
+
+    const filteredItems = projectsData.filter((item) => {
+        if (activeFilter === 'All') return true;
+        if (activeFilter === 'Videos') return item.type === 'video' || (item.galleryVideos && item.galleryVideos.length > 0);
+        return item.status === activeFilter;
+    });
+
+    return (
+        <div className="min-h-screen">
+            {/* Hero Section with Parallax */}
+            <ParallaxBackground imageSrc={bgInfrastructure} overlayOpacity={0.85}>
+                <section className="py-32 pt-40">
+                    <div className="container-wide section-padding">
+                        <ScrollReveal>
+                            <div className="text-center max-w-3xl mx-auto">
+                                <span className="text-white/70 font-semibold">Project Showcase</span>
+                                <h1 className="heading-display text-white mt-2 mb-6">Our Gallery</h1>
+                                <p className="text-xl text-white/80">
+                                    Visual highlights of our infrastructure milestones across Odisha
+                                </p>
+                            </div>
+                        </ScrollReveal>
+                    </div>
+                </section>
+            </ParallaxBackground>
+
+            {/* Gallery Section */}
+            <section className="section-padding">
+                <div className="container-wide">
+                    {/* Filters */}
+                    <ScrollReveal>
+                        <div className="flex flex-wrap justify-center gap-3 mb-12">
+                            {categories.map((category) => (
+                                <button
+                                    key={category}
+                                    onClick={() => setActiveFilter(category)}
+                                    className={cn(
+                                        'px-6 py-2.5 rounded-full font-medium transition-all duration-200',
+                                        activeFilter === category
+                                            ? 'bg-primary text-white scale-105'
+                                            : 'bg-grey-lighter text-foreground hover:bg-primary/10 hover:scale-105'
+                                    )}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                    </ScrollReveal>
+
+                    {/* Grid */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredItems.map((item, index) => (
+                            <ScrollReveal key={item.id} delay={index * 50}>
+                                <Link to={`/gallery/${item.id}`} className="block h-full group">
+                                    <GlowCard className="h-full flex flex-col overflow-hidden bg-white border border-border shadow-sm hover:shadow-lg transition-all duration-300">
+                                        <div className="relative aspect-video overflow-hidden">
+                                            <img
+                                                src={item.thumbnail}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+
+                                            {/* Status Badge */}
+                                            <div className="absolute top-4 right-4">
+                                                <span className={cn(
+                                                    "px-3 py-1 text-xs font-bold rounded-full backdrop-blur-md shadow-sm border",
+                                                    item.status === 'Ongoing'
+                                                        ? "bg-orange-500/90 text-white border-orange-400"
+                                                        : "bg-green-600/90 text-white border-green-500"
+                                                )}>
+                                                    {item.status}
+                                                </span>
+                                            </div>
+
+                                            {/* Type Icon */}
+                                            <div className="absolute top-4 left-4 bg-black/40 p-1.5 rounded-full backdrop-blur-sm text-white/90">
+                                                {item.type === 'video' ? <Play className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                                            </div>
+
+                                            {/* Click Indicator */}
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] bg-black/20">
+                                                <span className="bg-white/90 text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                    View Gallery <ExternalLink className="w-4 h-4" />
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-5 flex-1 flex flex-col">
+                                            <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors" title={item.title}>
+                                                {item.title}
+                                            </h3>
+                                            <div className="mt-auto flex items-start gap-2 text-muted-foreground text-sm">
+                                                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                                <span className="line-clamp-2">{item.location}</span>
+                                            </div>
+                                        </div>
+                                    </GlowCard>
+                                </Link>
+                            </ScrollReveal>
+                        ))}
+                    </div>
+
+                    {filteredItems.length === 0 && (
+                        <div className="text-center py-20 text-muted-foreground">
+                            <p>No items found for this category.</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+        </div>
+    );
+};
+
+export default Gallery;

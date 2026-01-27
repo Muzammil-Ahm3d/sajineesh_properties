@@ -35,6 +35,7 @@ export const Footer: React.FC = () => {
                 { name: 'About Us', path: '/about' },
                 { name: 'Our Services', path: '/services' },
                 { name: 'Projects', path: '/projects' },
+                { name: 'Gallery', path: '/gallery' },
                 { name: 'Contact Us', path: '/contact' },
               ].map((link) => (
                 <li key={link.path}>
@@ -95,6 +96,10 @@ export const Footer: React.FC = () => {
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-white/70" />
                 <span className="text-white/80 text-sm">sajineeshconstructions@gmail.com</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Building2 className="w-5 h-5 text-white/70" />
+                <span className="text-white/80 text-sm">GST IN: 21ASGPB8780N1ZH</span>
               </li>
             </ul>
           </div>
