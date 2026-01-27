@@ -55,6 +55,17 @@ const services = [
     ],
     image: serviceIrrigation,
   },
+  {
+    title: 'Machinery & Equipment',
+    description: 'Machinery Model: Mixed (Owned + Hired) - ensuring cost efficiency, flexibility, and uninterrupted execution for Government works.',
+    features: [
+      'Concrete Mixers & Road Rollers',
+      'Cranes, JCBs & Excavators',
+      'Tippers & Dumpers',
+      'Water Tankers & Compactors',
+    ],
+    image: bgInfrastructure,
+  },
 ];
 
 const Services = () => {
@@ -86,18 +97,18 @@ const Services = () => {
                 <div className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                   <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
                     <GlowCard className="overflow-hidden">
-                      <ImageCard 
-                        src={service.image} 
+                      <ImageCard
+                        src={service.image}
                         alt={service.title}
                         className="rounded-xl shadow-lg"
                       />
                     </GlowCard>
                   </div>
-                  
+
                   <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
                     <h2 className="heading-section mb-4">{service.title}</h2>
                     <p className="text-muted-foreground mb-6">{service.description}</p>
-                    
+
                     <ul className="space-y-3">
                       {service.features.map((feature) => (
                         <li key={feature} className="flex items-center gap-3">
@@ -123,8 +134,8 @@ const Services = () => {
               <p className="text-muted-foreground mb-8">
                 Get in touch with us to discuss your project requirements
               </p>
-              <a 
-                href="/contact" 
+              <a
+                href="/contact"
                 className="btn-primary inline-block"
               >
                 Contact Us Today

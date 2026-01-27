@@ -32,7 +32,7 @@ const projects = [
     description: 'Construction of new road from Talcher Bus Stand to Talcher Autonomous College to improve institutional access.',
     category: 'Roads',
     department: 'R&B Division',
-    location: 'Angul, Odisha',
+    location: 'Angul, Angul District, Central Odisha',
     status: 'Completed',
     image: roadTalcher,
   },
@@ -41,7 +41,7 @@ const projects = [
     description: 'Improvement of PR Road from Raj Hotel to Hulursingha Chhak for smooth urban traffic flow.',
     category: 'Roads',
     department: 'R&B Division',
-    location: 'Angul, Odisha',
+    location: 'Angul, Angul District, Central Odisha',
     status: 'Completed',
     image: roadAngulPr,
   },
@@ -50,7 +50,7 @@ const projects = [
     description: 'Road improvement and strengthening work to enhance rural connectivity.',
     category: 'Roads',
     department: 'R&B Division',
-    location: 'Angul, Odisha',
+    location: 'Angul, Angul District, Central Odisha',
     status: 'Completed',
     image: roadMaidharpur,
   },
@@ -59,7 +59,7 @@ const projects = [
     description: 'Construction of attendance rest shed at District Headquarters Hospital under Mo Sarkar scheme.',
     category: 'Buildings',
     department: 'R&B Division',
-    location: 'Angul, Odisha',
+    location: 'Angul, Angul District, Central Odisha',
     status: 'Completed',
     image: buildingDhhAngul,
   },
@@ -68,8 +68,8 @@ const projects = [
     description: 'Construction of High-Level bridge on Anantapur–Bankeswarpura Road under Biju Setu Yojana.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Balasore, Odisha',
-    status: 'Completed',
+    location: 'Balasore, Balasore District, Northern Odisha',
+    status: 'Work in Progress',
     image: bridgeKansabansa,
   },
   {
@@ -77,7 +77,7 @@ const projects = [
     description: 'High-Level bridge construction at Domuhanighat for rural connectivity.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Mayurbhanj, Odisha',
+    location: 'Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeBudhabalanga,
   },
@@ -86,7 +86,7 @@ const projects = [
     description: 'Bridge construction on Anandapur–Gunduriga Road under Biju Setu Yojana.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Rairangpur, Odisha',
+    location: 'Rairangpur, Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeGuria,
   },
@@ -95,8 +95,8 @@ const projects = [
     description: 'Bridge construction near Chasapada on Narasinghpur–Siruli Road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Puri, Odisha',
-    status: 'Completed',
+    location: 'Puri, Puri District, Eastern Odisha',
+    status: 'Work in Progress',
     image: bridgeRatrichara,
   },
   {
@@ -104,7 +104,7 @@ const projects = [
     description: 'High-Level bridge construction under PMGSY scheme.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Baripada, Odisha',
+    location: 'Baripada, Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeKatraBelbaria,
   },
@@ -113,7 +113,7 @@ const projects = [
     description: 'Bridge construction near Argalcut on MDR-13 to Balishai road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Jajpur, Odisha',
+    location: 'Jajpur, Jajpur District, Eastern Odisha',
     status: 'Completed',
     image: bridgeKharasrotaJajpur,
   },
@@ -122,7 +122,7 @@ const projects = [
     description: 'Bridge construction at Habalagadapatana–Baliadigidia road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Kendrapada, Odisha',
+    location: 'Kendrapada, Kendrapara District, Eastern Odisha',
     status: 'Completed',
     image: bridgeKharasrotaSakha,
   },
@@ -131,7 +131,7 @@ const projects = [
     description: 'Bridge construction on Upperbeda–Ambadia road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Baripada, Odisha',
+    location: 'Baripada, Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeKatraUpperbeda,
   },
@@ -140,7 +140,7 @@ const projects = [
     description: 'Construction of bridge on Gondipani–Nabinmundhakata road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Baripada, Odisha',
+    location: 'Baripada, Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeGondipani,
   },
@@ -149,7 +149,7 @@ const projects = [
     description: 'Bridge construction on Jharpokharia–Sankhabhanga road.',
     category: 'Bridges',
     department: 'Rural Works Division',
-    location: 'Baripada, Odisha',
+    location: 'Baripada, Mayurbhanj District, Northern Odisha',
     status: 'Completed',
     image: bridgeKochila,
   },
@@ -240,22 +240,27 @@ const Projects = () => {
               <ScrollReveal key={project.title} delay={index * 50}>
                 <div className="card-project h-full flex flex-col">
                   <ImageCard src={project.image} alt={project.title} />
-                  
+
                   <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
                         {project.category}
                       </span>
-                      <span className="px-3 py-1 bg-green-light/10 text-green-light text-xs font-medium rounded-full">
+                      <span className={cn(
+                        "px-3 py-1 text-xs font-medium rounded-full",
+                        project.status === 'Completed'
+                          ? "bg-green-light/10 text-green-light"
+                          : "bg-orange-500/10 text-orange-600"
+                      )}>
                         {project.status}
                       </span>
                     </div>
-                    
+
                     <h3 className="font-semibold text-lg mb-2">{project.title}</h3>
                     <p className="text-muted-foreground text-sm mb-4 flex-1">
                       {project.description}
                     </p>
-                    
+
                     <div className="space-y-2 pt-4 border-t border-border">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <MapPin className="w-4 h-4" />
@@ -283,8 +288,8 @@ const Projects = () => {
               <p className="text-muted-foreground mb-8">
                 Partner with us for your next infrastructure project
               </p>
-              <a 
-                href="/contact" 
+              <a
+                href="/contact"
                 className="btn-primary inline-block"
               >
                 Get in Touch

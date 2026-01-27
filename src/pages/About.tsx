@@ -90,21 +90,16 @@ const About = () => {
               <div>
                 <span className="text-primary font-semibold">Our Story</span>
                 <h2 className="heading-section mt-2 mb-6">
-                  Sajineesh Bikkina Construction Pvt. Ltd.
+                  Sajineesh Construction Pvt. Ltd.
                 </h2>
                 <p className="text-muted-foreground mb-4">
-                  Established in 2011, Sajineesh Bikkina Construction Pvt. Ltd. has grown to become
-                  a trusted A-Class Government Contractor, specializing in critical infrastructure
-                  projects across Odisha and neighboring states.
+                  Sajineesh Bikkina entered the construction industry in 2011 at a young age. He began his career as a site supervisor, gaining hands-on experience in project execution and site management.
                 </p>
                 <p className="text-muted-foreground mb-4">
-                  With over 13 years of experience and ₹100+ crores worth of successfully executed
-                  projects, we have built a reputation for quality, reliability, and timely delivery
-                  in bridge construction, road infrastructure, building construction, and irrigation works.
+                  Over the years, he progressed to working as a subcontractor and later established himself as an independent contractor.
                 </p>
                 <p className="text-muted-foreground">
-                  Our expertise spans across various government schemes including Biju Setu Yojana,
-                  PMGSY, and projects under R&B and Rural Works divisions.
+                  He is currently an A-Class licensed contractor, undertaking government and infrastructure works in Odisha, Bhubaneswar.
                 </p>
               </div>
             </ScrollReveal>
@@ -126,6 +121,8 @@ const About = () => {
           </div>
         </div>
       </section>
+
+
 
       {/* Founder Section */}
       <section className="section-padding bg-grey-lighter">
@@ -218,6 +215,29 @@ const About = () => {
           </div>
         </div>
       </section >
+
+      {/* Departments Worked With */}
+      <section className="section-padding">
+        <div className="container-wide">
+          <ScrollReveal>
+            <div className="text-center mb-12">
+              <h2 className="heading-section">Departments Worked With</h2>
+            </div>
+            <div className="flex flex-wrap justify-center gap-6">
+              {[
+                'Roads & Buildings (R&B) Department, Odisha',
+                'Rural Works Department',
+                'Irrigation & Water Resources Department'
+              ].map((dept, index) => (
+                <div key={index} className="bg-white px-6 py-4 rounded-lg shadow-sm border border-border flex items-center gap-3 hover:border-primary hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                  <span className="font-medium">{dept}</span>
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
 
       {/* Why Choose Us */}
       < section className="section-padding bg-grey-lighter" >
