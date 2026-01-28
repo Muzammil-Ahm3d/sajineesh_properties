@@ -2,8 +2,21 @@ import React, { useState } from 'react';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { ImageCard } from '@/components/ImageCard';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
-import { MapPin, Building2 } from 'lucide-react';
+import { MapPin, Building2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/config';
+
+interface WordPressPost {
+  id: number;
+  title: { rendered: string };
+  content: { rendered: string };
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string;
+    }>;
+  };
+}
 
 // Import background
 import bgInfrastructure from '@/assets/bg-infrastructure.jpg';
@@ -158,9 +171,45 @@ const projects = [
 const Projects = () => {
   const [activeCategory, setActiveCategory] = useState('All');
 
+  const { data: wpPosts, isLoading } = useQuery({
+    queryKey: ['wpProjects'],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/posts?_embed&per_page=50`);
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      return response.json() as Promise<WordPressPost[]>;
+    }
+  });
+
+  const dynamicProjects = (wpPosts || []).map((post) => {
+    const content = post.content.rendered;
+    const metaMatch = content.match(/<!-- PROJECT_META: (.*) -->/);
+    let meta = { location: 'Odisha', status: 'Completed', type: 'gallery', category: 'Bridges' };
+
+    if (metaMatch && metaMatch[1]) {
+      try {
+        meta = JSON.parse(metaMatch[1]);
+      } catch (e) {
+        console.error("Failed to parse meta", e);
+      }
+    }
+
+    return {
+      title: post.title.rendered,
+      description: content.replace(/<[^>]*>?/gm, '').split('-->').pop()?.substring(0, 150).trim() + '...',
+      category: meta.category || 'Bridges',
+      department: 'Infrastructure Update',
+      location: meta.location || 'Odisha',
+      status: meta.status || 'Completed',
+      image: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg',
+      metaType: meta.type
+    };
+  }).filter(item => item.metaType === 'project');
+
+  const allProjects = [...dynamicProjects, ...projects];
+
   const filteredProjects = activeCategory === 'All'
-    ? projects
-    : projects.filter((p) => p.category === activeCategory);
+    ? allProjects
+    : allProjects.filter((p) => p.category === activeCategory);
 
   return (
     <div className="min-h-screen">
@@ -203,6 +252,14 @@ const Projects = () => {
               ))}
             </div>
           </ScrollReveal>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20 text-primary">
+              <Loader2 className="w-10 h-10 animate-spin mb-4" />
+              <p className="text-lg font-medium">Loading portfolio...</p>
+            </div>
+          )}
 
           {/* Stats Bar */}
           <ScrollReveal>

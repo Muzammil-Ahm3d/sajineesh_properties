@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Upload, Lock, LogOut, CheckCircle2 } from 'lucide-react';
-import { CMS_URL } from '@/config';
+import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon } from 'lucide-react';
+import { CMS_URL, API_URL } from '@/config';
+import { useQuery } from '@tanstack/react-query';
 
 const Admin = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,8 +18,21 @@ const Admin = () => {
     // Form states
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [postType, setPostType] = useState<'gallery' | 'project'>('gallery');
+    const [location, setLocation] = useState('');
+    const [status, setStatus] = useState<'Ongoing' | 'Completed'>('Ongoing');
+    const [projectCategory, setProjectCategory] = useState('Bridges');
     const [file, setFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+
+    // Fetch latest posts to display in admin
+    const { data: recentPosts, refetch } = useQuery({
+        queryKey: ['adminRecentPosts'],
+        queryFn: async () => {
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts?_embed&per_page=5`);
+            return response.json();
+        }
+    });
 
     // Simple local login for the client
     const handleLogin = (e: React.FormEvent) => {
@@ -71,7 +85,20 @@ const Admin = () => {
             const media = await mediaResponse.json();
             setUploadProgress(60);
 
-            // 2. Create Post
+            // 2. Create Post with metadata
+            // We'll store metadata in a hidden HTML comment for easy parsing
+            const meta = {
+                location,
+                status,
+                type: postType,
+                category: projectCategory
+            };
+
+            const metaContent = `
+<!-- PROJECT_META: ${JSON.stringify(meta)} -->
+${description}
+`;
+
             const postResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts`, {
                 method: 'POST',
                 headers: {
@@ -80,7 +107,7 @@ const Admin = () => {
                 },
                 body: JSON.stringify({
                     title: title,
-                    content: description,
+                    content: metaContent,
                     status: 'publish',
                     featured_media: media.id,
                 }),
@@ -99,7 +126,9 @@ const Admin = () => {
             });
             setTitle('');
             setDescription('');
+            setLocation('');
             setFile(null);
+            refetch(); // Refresh the list
 
         } catch (error) {
             console.error(error);
@@ -171,16 +200,80 @@ const Admin = () => {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleUpload} className="space-y-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="title">Update Title</Label>
-                                <Input
-                                    id="title"
-                                    placeholder="e.g., Bridge Construction Progress - Week 4"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Post Type</Label>
+                                    <div className="flex bg-grey-lighter p-1 rounded-lg">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPostType('gallery')}
+                                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${postType === 'gallery' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                                        >
+                                            Gallery Update
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPostType('project')}
+                                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${postType === 'project' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+                                        >
+                                            Full Project
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="title">Update Title</Label>
+                                    <Input
+                                        id="title"
+                                        placeholder="e.g., Bridge Construction Progress"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        required
+                                    />
+                                </div>
                             </div>
+
+                            {postType === 'project' && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="location">Project Location</Label>
+                                            <Input
+                                                id="location"
+                                                placeholder="e.g., Balasore, Odisha"
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="item-status">Project Status</Label>
+                                            <select
+                                                id="item-status"
+                                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm cursor-pointer"
+                                                value={status}
+                                                onChange={(e) => setStatus(e.target.value as 'Ongoing' | 'Completed')}
+                                            >
+                                                <option value="Ongoing">Ongoing</option>
+                                                <option value="Completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="project-category">Project Category</Label>
+                                        <select
+                                            id="project-category"
+                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm cursor-pointer"
+                                            value={projectCategory}
+                                            onChange={(e) => setProjectCategory(e.target.value)}
+                                        >
+                                            <option value="Bridges">Bridges</option>
+                                            <option value="Roads">Roads</option>
+                                            <option value="Buildings">Buildings</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label htmlFor="desc">Description</Label>
@@ -248,6 +341,49 @@ const Admin = () => {
                         </form>
                     </CardContent>
                 </Card>
+
+                {/* Recent Activity Section */}
+                <div className="mt-12">
+                    <div className="flex items-center gap-2 mb-4">
+                        <History className="w-5 h-5 text-primary" />
+                        <h2 className="text-xl font-bold">Recent Activity</h2>
+                    </div>
+                    <div className="space-y-3">
+                        {recentPosts?.map((post: any) => {
+                            const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
+                            let metaType = 'gallery';
+                            if (metaMatch) {
+                                try { metaType = JSON.parse(metaMatch[1]).type; } catch (e) { }
+                            }
+
+                            return (
+                                <div key={post.id} className="bg-white p-4 rounded-xl border border-border flex items-center justify-between shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-grey-lighter">
+                                            <img
+                                                src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg'}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-foreground line-clamp-1" dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+                                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${metaType === 'project' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
+                                                {metaType === 'project' ? 'Project' : 'Gallery Update'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={metaType === 'project' ? '/projects' : '/gallery'}
+                                        target="_blank"
+                                        className="p-2 hover:bg-grey-lighter rounded-full transition-colors"
+                                    >
+                                        <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
+                                    </a>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
 
                 <div className="mt-8 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />

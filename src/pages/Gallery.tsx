@@ -35,16 +35,31 @@ const Gallery = () => {
         }
     });
 
-    const dynamicItems = (wpPosts || []).map((post) => ({
-        id: `wp-${post.id}`,
-        title: post.title.rendered,
-        location: 'Site Update', // WordPress posts might not have a location field by default
-        status: 'Completed' as const,
-        type: 'image' as const, // Default to image, could be inferred from content
-        thumbnail: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg',
-        description: post.content.rendered.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...',
-        isDynamic: true
-    }));
+    const dynamicItems = (wpPosts || []).map((post) => {
+        const content = post.content.rendered;
+        const metaMatch = content.match(/<!-- PROJECT_META: (.*) -->/);
+        let meta = { location: 'Site Update', status: 'Completed', type: 'gallery' };
+
+        if (metaMatch && metaMatch[1]) {
+            try {
+                meta = JSON.parse(metaMatch[1]);
+            } catch (e) {
+                console.error("Failed to parse meta", e);
+            }
+        }
+
+        return {
+            id: `wp-${post.id}`,
+            title: post.title.rendered,
+            location: meta.location || 'Site Update',
+            status: meta.status as any || 'Completed',
+            type: (meta.type === 'video' ? 'video' : 'image') as any, // Simple mapping
+            thumbnail: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg',
+            description: content.replace(/<[^>]*>?/gm, '').split('-->').pop()?.substring(0, 150).trim() + '...',
+            isDynamic: true,
+            metaType: meta.type // Keep track if it's a gallery or project type
+        };
+    }).filter(item => item.metaType !== 'project'); // In Gallery, show only updates. Projects go to Projects page.
 
     const allItems = [...dynamicItems, ...projectsData];
 
