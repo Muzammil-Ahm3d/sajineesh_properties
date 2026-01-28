@@ -4,19 +4,54 @@ import { projectsData } from '@/data/projects';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import { GlowCard } from '@/components/GlowCard';
-import { MapPin, Play, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { MapPin, Play, Image as ImageIcon, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { API_URL } from '@/config';
 import bgInfrastructure from '@/assets/bg-infrastructure.jpg';
+
+interface WordPressPost {
+    id: number;
+    title: { rendered: string };
+    content: { rendered: string };
+    _embedded?: {
+        'wp:featuredmedia'?: Array<{
+            source_url: string;
+        }>;
+    };
+}
 
 const categories = ['All', 'Ongoing', 'Completed', 'Videos'];
 
 const Gallery = () => {
     const [activeFilter, setActiveFilter] = useState('All');
 
-    const filteredItems = projectsData.filter((item) => {
+    const { data: wpPosts, isLoading, isError } = useQuery({
+        queryKey: ['wpPosts'],
+        queryFn: async () => {
+            const response = await fetch(`${API_URL}/posts?_embed&per_page=20`);
+            if (!response.ok) throw new Error('Failed to fetch updates');
+            return response.json() as Promise<WordPressPost[]>;
+        }
+    });
+
+    const dynamicItems = (wpPosts || []).map((post) => ({
+        id: `wp-${post.id}`,
+        title: post.title.rendered,
+        location: 'Site Update', // WordPress posts might not have a location field by default
+        status: 'Completed' as const,
+        type: 'image' as const, // Default to image, could be inferred from content
+        thumbnail: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg',
+        description: post.content.rendered.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...',
+        isDynamic: true
+    }));
+
+    const allItems = [...dynamicItems, ...projectsData];
+
+    const filteredItems = allItems.filter((item) => {
         if (activeFilter === 'All') return true;
-        if (activeFilter === 'Videos') return item.type === 'video' || (item.galleryVideos && item.galleryVideos.length > 0);
-        return item.status === activeFilter;
+        if (activeFilter === 'Videos') return item.type === 'video' || (item as any).galleryVideos?.length > 0;
+        return (item as any).status === activeFilter;
     });
 
     return (
@@ -61,59 +96,87 @@ const Gallery = () => {
                         </div>
                     </ScrollReveal>
 
+                    {/* Loading State */}
+                    {isLoading && (
+                        <div className="flex flex-col items-center justify-center py-20 text-primary">
+                            <Loader2 className="w-10 h-10 animate-spin mb-4" />
+                            <p className="text-lg font-medium">Fetching latest updates...</p>
+                        </div>
+                    )}
+
+                    {/* Error State */}
+                    {isError && (
+                        <div className="text-center py-20 text-destructive bg-destructive/5 rounded-2xl border border-destructive/20 mb-12">
+                            <p className="text-lg font-medium">Could not load the latest updates. Showing archived projects.</p>
+                        </div>
+                    )}
+
                     {/* Grid */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredItems.map((item, index) => (
-                            <ScrollReveal key={item.id} delay={index * 50}>
-                                <Link to={`/gallery/${item.id}`} className="block h-full group">
-                                    <GlowCard className="h-full flex flex-col overflow-hidden bg-white border border-border shadow-sm hover:shadow-lg transition-all duration-300">
-                                        <div className="relative aspect-video overflow-hidden">
-                                            <img
-                                                src={item.thumbnail}
-                                                alt={item.title}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                    {!isLoading && (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredItems.map((item, index) => (
+                                <ScrollReveal key={item.id} delay={index * 50}>
+                                    <Link to={(item as any).isDynamic ? '#' : `/gallery/${item.id}`} className={cn("block h-full group", (item as any).isDynamic && "cursor-default")}>
+                                        <GlowCard className="h-full flex flex-col overflow-hidden bg-white border border-border shadow-sm hover:shadow-lg transition-all duration-300">
+                                            <div className="relative aspect-video overflow-hidden">
+                                                <img
+                                                    src={item.thumbnail}
+                                                    alt={item.title}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                />
+                                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
 
-                                            {/* Status Badge */}
-                                            <div className="absolute top-4 right-4">
-                                                <span className={cn(
-                                                    "px-3 py-1 text-xs font-bold rounded-full backdrop-blur-md shadow-sm border",
-                                                    item.status === 'Ongoing'
-                                                        ? "bg-orange-500/90 text-white border-orange-400"
-                                                        : "bg-green-600/90 text-white border-green-500"
-                                                )}>
-                                                    {item.status}
-                                                </span>
+                                                {/* Status Badge */}
+                                                <div className="absolute top-4 right-4">
+                                                    <span className={cn(
+                                                        "px-3 py-1 text-xs font-bold rounded-full backdrop-blur-md shadow-sm border",
+                                                        (item as any).isDynamic
+                                                            ? "bg-primary/90 text-white border-primary-foreground/20"
+                                                            : item.status === 'Ongoing'
+                                                                ? "bg-orange-500/90 text-white border-orange-400"
+                                                                : "bg-green-600/90 text-white border-green-500"
+                                                    )}>
+                                                        {(item as any).isDynamic ? 'Latest Update' : item.status}
+                                                    </span>
+                                                </div>
+
+                                                {/* Type Icon */}
+                                                <div className="absolute top-4 left-4 bg-black/40 p-1.5 rounded-full backdrop-blur-sm text-white/90">
+                                                    {item.type === 'video' ? <Play className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                                                </div>
+
+                                                {/* Click Indicator */}
+                                                {!(item as any).isDynamic && (
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] bg-black/20">
+                                                        <span className="bg-white/90 text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                            View Gallery <ExternalLink className="w-4 h-4" />
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            {/* Type Icon */}
-                                            <div className="absolute top-4 left-4 bg-black/40 p-1.5 rounded-full backdrop-blur-sm text-white/90">
-                                                {item.type === 'video' ? <Play className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                                            <div className="p-5 flex-1 flex flex-col">
+                                                <h3
+                                                    className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors"
+                                                    title={item.title}
+                                                    dangerouslySetInnerHTML={{ __html: item.title }}
+                                                />
+                                                <div className="mt-auto flex items-start gap-2 text-muted-foreground text-sm">
+                                                    <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                                    <span className="line-clamp-2">{item.location}</span>
+                                                </div>
+                                                {(item as any).isDynamic && (
+                                                    <p className="mt-3 text-sm text-foreground/70 line-clamp-3 italic">
+                                                        {item.description}
+                                                    </p>
+                                                )}
                                             </div>
-
-                                            {/* Click Indicator */}
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px] bg-black/20">
-                                                <span className="bg-white/90 text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                                    View Gallery <ExternalLink className="w-4 h-4" />
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-5 flex-1 flex flex-col">
-                                            <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors" title={item.title}>
-                                                {item.title}
-                                            </h3>
-                                            <div className="mt-auto flex items-start gap-2 text-muted-foreground text-sm">
-                                                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                                                <span className="line-clamp-2">{item.location}</span>
-                                            </div>
-                                        </div>
-                                    </GlowCard>
-                                </Link>
-                            </ScrollReveal>
-                        ))}
-                    </div>
+                                        </GlowCard>
+                                    </Link>
+                                </ScrollReveal>
+                            ))}
+                        </div>
+                    )}
 
                     {filteredItems.length === 0 && (
                         <div className="text-center py-20 text-muted-foreground">
