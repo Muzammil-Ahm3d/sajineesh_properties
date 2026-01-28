@@ -37,29 +37,32 @@ export const Navbar: React.FC = () => {
       className={cn(
         'fixed top-0 left-0 right-0 z-[999] transition-all duration-300',
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-md'
-          : 'bg-transparent'
+          ? 'bg-white/95 backdrop-blur-md shadow-md py-1'
+          : 'bg-green-dark shadow-lg py-2'
       )}
     >
-      <div className="container-wide px-4 py-4">
+      <div className="container-wide px-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
               src={logo}
               alt="Sajineesh Construction"
-              className="h-12 md:h-16 w-auto object-contain transition-transform duration-300 hover:scale-110"
+              className={cn(
+                "w-auto object-contain transition-all duration-300 hover:scale-105",
+                isScrolled ? "h-12 md:h-14" : "h-14 md:h-20"
+              )}
             />
             <div className="flex flex-col max-w-[200px] sm:max-w-none">
               <span className={cn(
-                "font-bold text-sm md:text-lg leading-tight uppercase tracking-tight truncate",
+                "font-bold text-sm md:text-xl leading-tight uppercase tracking-tight truncate",
                 isScrolled ? "text-primary" : "text-white"
               )}>
                 Sajineesh
               </span>
               <span className={cn(
-                "font-medium text-xs md:text-sm tracking-wide truncate",
-                isScrolled ? "text-foreground" : "text-white/90"
+                "font-medium text-xs md:text-base tracking-wide truncate",
+                isScrolled ? "text-foreground" : "text-white/80"
               )}>
                 Construction Pvt Ltd
               </span>
@@ -73,10 +76,10 @@ export const Navbar: React.FC = () => {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'relative font-medium transition-colors duration-300',
+                  'relative font-semibold transition-colors duration-300 text-sm uppercase tracking-wider',
                   location.pathname === link.path
                     ? isScrolled ? 'text-primary' : 'text-white'
-                    : isScrolled ? 'text-foreground/70 hover:text-primary' : 'text-white/80 hover:text-white',
+                    : isScrolled ? 'text-foreground/70 hover:text-primary' : 'text-white/70 hover:text-white',
                   'after:absolute after:left-0 after:bottom-[-4px] after:h-0.5 after:transition-all after:duration-300',
                   location.pathname === link.path
                     ? isScrolled ? 'after:w-full after:bg-primary' : 'after:w-full after:bg-white'
@@ -93,10 +96,10 @@ export const Navbar: React.FC = () => {
             <Link
               to="/contact"
               className={cn(
-                'px-6 py-2.5 rounded-lg font-semibold transition-all duration-300',
+                'px-6 py-2.5 rounded-lg font-bold transition-all duration-300 uppercase text-xs tracking-widest shadow-sm',
                 isScrolled
-                  ? 'bg-primary text-white hover:bg-green-medium'
-                  : 'bg-white text-green-dark hover:bg-white/90'
+                  ? 'bg-primary text-white hover:bg-green-medium hover:shadow-md'
+                  : 'bg-white text-green-dark hover:bg-white/90 hover:shadow-md'
               )}
             >
               Get in Touch
@@ -109,7 +112,7 @@ export const Navbar: React.FC = () => {
             className={cn(
               'lg:hidden p-2 rounded-lg transition-colors flex-shrink-0',
               isScrolled ? 'text-foreground hover:bg-black/5' : 'text-white hover:bg-white/10',
-              'bg-white/5 backdrop-blur-sm border border-white/10'
+              !isScrolled && 'bg-white/5 backdrop-blur-sm border border-white/10'
             )}
             aria-label="Toggle menu"
           >
