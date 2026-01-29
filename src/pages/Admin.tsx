@@ -104,7 +104,6 @@ const Admin = () => {
 
         try {
             // Attempt 1: Force Delete via Method Override
-            // We use ?force=true to skip Trash (which sometimes fails on restrictive servers)
             console.log("Attempting Force Delete...");
             const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=DELETE&force=true`, {
                 method: 'POST',
@@ -117,17 +116,36 @@ const Admin = () => {
                 return;
             }
 
-            // If failed, throw error with details
+            // If Force Delete fails, try "Soft Delete" (Move to Draft)
+            console.log("Force delete denied, attempting Soft Delete (Draft)...");
+            const softResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader,
+                },
+                body: JSON.stringify({ status: 'draft' })
+            });
+
+            if (softResponse.ok) {
+                toast({
+                    title: "Moved to Trash",
+                    description: "Server blocked permanent delete, so we moved it to Drafts (Hidden from site).",
+                });
+                refetch();
+                return;
+            }
+
+            // If both fail, throw the original error
             const errorMsg = await getErrorMessage(response);
             throw new Error(errorMsg);
 
         } catch (error) {
             console.error("Delete failed", error);
-            // Show the raw error to the user for debugging
-            setDiagInfo(`DELETE FAILED:\n${error instanceof Error ? error.message : 'Unknown Error'}\n\nTry checking 'Force Delete' permissions.`);
+            setDiagInfo(`DELETE FAILED:\n${error instanceof Error ? error.message : 'Unknown Error'}\n\nServer blocked both Delete and Edit capabilities.`);
             toast({
                 title: "Delete Failed",
-                description: "Check the blue diagnostic box for the exact error code.",
+                description: "Check the blue diagnostic box.",
                 variant: "destructive"
             });
         } finally {
