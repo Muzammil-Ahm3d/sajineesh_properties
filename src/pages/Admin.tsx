@@ -333,10 +333,10 @@ const Admin = () => {
                                 <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Email Address" required />
                             </div>
                             <div className="space-y-2">
-                                <Label>Application Password</Label>
-                                <Input type="password" value={appPassword} onChange={(e) => setAppPassword(e.target.value)} placeholder="xxxx xxxx xxxx xxxx" required />
+                                <Label>Password / App Password</Label>
+                                <Input type="password" value={appPassword} onChange={(e) => setAppPassword(e.target.value)} placeholder="Main Password OR App Password" required />
                                 <p className="text-[10px] text-muted-foreground">
-                                    Generate at: Users &gt; Profile &gt; Application Passwords
+                                    If App Passwords are missing, try your Main Password (if Basic Auth is enabled).
                                 </p>
                             </div>
                             <Button type="submit" className="w-full">Connect</Button>
