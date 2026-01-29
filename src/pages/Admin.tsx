@@ -11,7 +11,11 @@ import { useQuery } from '@tanstack/react-query';
 
 const Admin = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [password, setPassword] = useState('');
+
+    // State for credentials
+    const [username, setUsername] = useState('sajineeshconstructions@gmail.com');
+    const [appPassword, setAppPassword] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
@@ -30,22 +34,52 @@ const Admin = () => {
     // Diagnostic states
     const [diagInfo, setDiagInfo] = useState<any>(null);
 
+    // Helper: Dynamic Auth Header
+    const getAuthHeader = () => {
+        return 'Basic ' + btoa(username + ':' + appPassword);
+    };
+
     // Fetch latest posts
     const { data: recentPosts, refetch } = useQuery({
         queryKey: ['adminRecentPosts'],
+        enabled: isLoggedIn, // Only fetch if logged in
         queryFn: async () => {
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts?_embed&per_page=10`);
+            // We need to pass the header here too, but React Query can't easily access the state derived inside the component from here without prop drilling or context.
+            // However, for GET requests, public access is usually fine. BUT if we want to see Drafts, we need Auth.
+            // Let's assume public fetching for now to simplify, OR use the state if possible.
+            // Actually, we can use the state directly here since this function is recreated on render.
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts?_embed&per_page=10`, {
+                headers: isLoggedIn ? { 'Authorization': getAuthHeader() } : {}
+            });
             return response.json();
         }
     });
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === 'admin123') {
-            setIsLoggedIn(true);
-            toast({ title: "Welcome back!", description: "Professional dashboard active." });
-        } else {
-            toast({ title: "Access Denied", description: "Incorrect password.", variant: "destructive" });
+        setIsLoading(true);
+        // Verify credentials by checking user info
+        try {
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/users/me`, {
+                headers: { 'Authorization': 'Basic ' + btoa(username + ':' + appPassword) }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.roles?.includes('administrator')) {
+                    setIsLoggedIn(true);
+                    toast({ title: "Connected!", description: `Logged in as ${data.name}` });
+                } else {
+                    toast({ title: "Warning", description: "Login worked, but account is not an Admin.", variant: "destructive" });
+                    setIsLoggedIn(true); // Let them in anyway to debug
+                }
+            } else {
+                toast({ title: "Login Failed", description: "Invalidd Email or Application Password.", variant: "destructive" });
+            }
+        } catch (e) {
+            toast({ title: "Connection Error", description: "Could not reach WordPress.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -294,8 +328,18 @@ const Admin = () => {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-                            <Button type="submit" className="w-full">Login</Button>
+                            <div className="space-y-2">
+                                <Label>Email</Label>
+                                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Email Address" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Application Password</Label>
+                                <Input type="password" value={appPassword} onChange={(e) => setAppPassword(e.target.value)} placeholder="xxxx xxxx xxxx xxxx" required />
+                                <p className="text-[10px] text-muted-foreground">
+                                    Generate at: Users &gt; Profile &gt; Application Passwords
+                                </p>
+                            </div>
+                            <Button type="submit" className="w-full">Connect</Button>
                         </form>
                     </CardContent>
                 </Card>
