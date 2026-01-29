@@ -36,6 +36,9 @@ const Gallery = () => {
                 });
 
                 if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('UNAUTHORIZED_API');
+                    }
                     const errBody = await response.text();
                     console.error("WP API ERROR:", response.status, errBody);
                     throw new Error(`Server returned ${response.status}`);
@@ -134,13 +137,18 @@ const Gallery = () => {
                         </div>
                     )}
 
-                    {/* Error State */}
                     {isError && (
-                        <div className="text-center py-20 text-destructive bg-destructive/5 rounded-2xl border border-destructive/20 mb-12">
-                            <p className="text-lg font-medium">Could not load the latest updates. Showing archived projects.</p>
+                        <div className="container-wide mb-8">
+                            <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl text-center">
+                                <p className="font-semibold">
+                                    {error instanceof Error && error.message === 'UNAUTHORIZED_API'
+                                        ? "Action Required: WordPress API is protected. Please uncheck 'wp/v2/posts' in miniOrange settings."
+                                        : "Could not load the latest updates. Showing archived projects."
+                                    }
+                                </p>
+                            </div>
                         </div>
                     )}
-
                     {/* Grid */}
                     {!isLoading && (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
