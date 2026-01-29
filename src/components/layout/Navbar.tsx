@@ -38,9 +38,7 @@ export const Navbar: React.FC = () => {
         'fixed top-0 left-0 right-0 z-[999] transition-all duration-300',
         isScrolled
           ? 'bg-white/95 backdrop-blur-md shadow-md py-1'
-          : location.pathname === '/'
-            ? 'bg-transparent py-4'
-            : 'bg-green-dark shadow-lg py-2'
+          : 'bg-transparent py-4'
       )}
     >
       <div className="container-wide px-4">
