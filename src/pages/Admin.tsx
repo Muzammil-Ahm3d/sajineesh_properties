@@ -219,6 +219,11 @@ ${description}
                                             Full Project
                                         </button>
                                     </div>
+                                    <p className="text-[10px] text-muted-foreground/80 mt-1 pl-1 italic">
+                                        {postType === 'gallery'
+                                            ? "★ Appears in 'Gallery' page as a weekly construction update."
+                                            : "★ Appears in 'Projects' page as a permanent portfolio item."}
+                                    </p>
                                 </div>
 
                                 <div className="space-y-2">

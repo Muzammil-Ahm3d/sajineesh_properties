@@ -26,13 +26,28 @@ const categories = ['All', 'Ongoing', 'Completed', 'Videos'];
 const Gallery = () => {
     const [activeFilter, setActiveFilter] = useState('All');
 
-    const { data: wpPosts, isLoading, isError } = useQuery({
+    const { data: wpPosts, isLoading, isError, error } = useQuery({
         queryKey: ['wpPosts'],
         queryFn: async () => {
-            const response = await fetch(`${API_URL}/posts?_embed&per_page=20`);
-            if (!response.ok) throw new Error('Failed to fetch updates');
-            return response.json() as Promise<WordPressPost[]>;
-        }
+            try {
+                // Reduced from 20 to 12 for speed
+                const response = await fetch(`${API_URL}/posts?_embed&per_page=12`, {
+                    signal: AbortSignal.timeout(8000) // 8 second timeout
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.text();
+                    console.error("WP API ERROR:", response.status, errBody);
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                return response.json() as Promise<WordPressPost[]>;
+            } catch (err: any) {
+                console.error("FETCH FAILED:", err.message);
+                throw err;
+            }
+        },
+        retry: 2,
+        staleTime: 1000 * 60 * 5, // Cache for 5 mins
     });
 
     const dynamicItems = (wpPosts || []).map((post) => {

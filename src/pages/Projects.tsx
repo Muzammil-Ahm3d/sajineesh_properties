@@ -171,13 +171,26 @@ const projects = [
 const Projects = () => {
   const [activeCategory, setActiveCategory] = useState('All');
 
-  const { data: wpPosts, isLoading } = useQuery({
+  const { data: wpPosts, isLoading, isError } = useQuery({
     queryKey: ['wpProjects'],
     queryFn: async () => {
-      const response = await fetch(`${API_URL}/posts?_embed&per_page=50`);
-      if (!response.ok) throw new Error('Failed to fetch projects');
-      return response.json() as Promise<WordPressPost[]>;
-    }
+      try {
+        const response = await fetch(`${API_URL}/posts?_embed&per_page=50`, {
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!response.ok) {
+          const errBody = await response.text();
+          console.error("WP PROJECT API ERROR:", response.status, errBody);
+          throw new Error(`Server returned ${response.status}`);
+        }
+        return response.json() as Promise<WordPressPost[]>;
+      } catch (err: any) {
+        console.error("PROJECT FETCH FAILED:", err.message);
+        throw err;
+      }
+    },
+    retry: 2,
+    staleTime: 1000 * 60 * 10, // Projects change less often, cache for 10 mins
   });
 
   const dynamicProjects = (wpPosts || []).map((post) => {
