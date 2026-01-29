@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon, Trash2, PencilLine, X as CloseIcon } from 'lucide-react';
+import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon, Trash2, PencilLine, AlertCircle, ShieldCheck } from 'lucide-react';
 import { CMS_URL, API_URL } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 
@@ -27,119 +27,84 @@ const Admin = () => {
     const [editId, setEditId] = useState<number | null>(null);
     const [existingMediaId, setExistingMediaId] = useState<number | null>(null);
 
-    // Fetch latest posts to display in admin
+    // Diagnostic states
+    const [diagInfo, setDiagInfo] = useState<string | null>(null);
+
+    // Fetch latest posts
     const { data: recentPosts, refetch } = useQuery({
         queryKey: ['adminRecentPosts'],
         queryFn: async () => {
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts?_embed&per_page=5`);
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts?_embed&per_page=10`);
             return response.json();
         }
     });
 
-    // Simple local login for the client
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === 'admin123') { // Suggested default, can be changed
+        if (password === 'admin123') {
             setIsLoggedIn(true);
-            toast({
-                title: "Welcome back!",
-                description: "You can now post your weekly updates.",
-            });
+            toast({ title: "Welcome back!", description: "Professional dashboard active." });
         } else {
-            toast({
-                title: "Access Denied",
-                description: "Incorrect password. Please try again.",
-                variant: "destructive",
-            });
+            toast({ title: "Access Denied", description: "Incorrect password.", variant: "destructive" });
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm("Are you sure you want to delete this post?")) return;
-
+    const runDiagnostics = async () => {
         setIsLoading(true);
         try {
             const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
-
-            // Try Level 1: Standard Deletion (Official Double Override)
-            // Using BOTH URL param and Header to force server recognition
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=DELETE`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': authHeader,
-                    'X-HTTP-Method-Override': 'DELETE'
-                }
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/users/me`, {
+                headers: { 'Authorization': authHeader }
             });
+            const data = await response.json();
 
             if (response.ok) {
-                toast({ title: "Deleted", description: "Post removed from site." });
-                refetch();
-                return;
-            }
-
-            // Fallback: If delete is hard-blocked, try updating status to draft (Soft Delete)
-            console.log("Hard delete blocked, attempting status override...");
-            const softResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=PUT`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authHeader,
-                    'X-HTTP-Method-Override': 'PUT'
-                },
-                body: JSON.stringify({ status: 'draft' })
-            });
-
-            if (softResponse.ok) {
-                toast({
-                    title: "Status Updated",
-                    description: "Post hidden from site (moved to drafts).",
-                });
-                refetch();
+                setDiagInfo(`Connected as: ${data.name}\nRoles: ${data.roles?.join(', ')}\nCapabilities: ${data.capabilities ? Object.keys(data.capabilities).filter(k => data.capabilities[k]).slice(0, 5).join(', ') + '...' : 'Unknown'}`);
             } else {
-                const errorData = await softResponse.json();
-                throw new Error(errorData.message || 'Operation failed');
+                setDiagInfo(`Error: ${data.message || 'Unknown response'}`);
             }
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to remove post.",
-                variant: "destructive"
-            });
+        } catch (e) {
+            setDiagInfo('Connection failed. Check CMS_URL and Internet.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const startEdit = (post: any) => {
-        setEditId(post.id);
-        setTitle(post.title.rendered);
-        setExistingMediaId(post.featured_media);
+    const handleDelete = async (id: number) => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
+        setIsLoading(true);
+        try {
+            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
 
-        // Parse meta
-        const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
-        if (metaMatch) {
-            try {
-                const meta = JSON.parse(metaMatch[1]);
-                setDescription(post.content.rendered.replace(/<!-- PROJECT_META: .* -->\s*/, '').trim());
-                setPostType(meta.type || 'gallery');
-                setLocation(meta.location || '');
-                setStatus(meta.status || 'Ongoing');
-                setProjectCategory(meta.category || 'Bridges');
-            } catch (e) { }
-        } else {
-            setDescription('');
+            // Try standard DELETE first
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': authHeader }
+            });
+
+            if (response.ok) {
+                toast({ title: "Success", description: "Post removed." });
+                refetch();
+            } else {
+                // Try override if standard fails
+                const retry = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=DELETE`, {
+                    method: 'POST',
+                    headers: { 'Authorization': authHeader }
+                });
+
+                if (retry.ok) {
+                    toast({ title: "Success", description: "Post removed via override." });
+                    refetch();
+                } else {
+                    const error = await retry.json();
+                    throw new Error(error.message || 'Server rejected deletion');
+                }
+            }
+        } catch (error) {
+            toast({ title: "Delete Failed", description: error instanceof Error ? error.message : "Error", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
         }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const cancelEdit = () => {
-        setEditId(null);
-        setExistingMediaId(null);
-        setTitle('');
-        setDescription('');
-        setLocation('');
-        setFile(null);
     };
 
     const handleUpload = async (e: React.FormEvent) => {
@@ -153,48 +118,36 @@ const Admin = () => {
             const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
             let mediaId = existingMediaId;
 
-            // 1. Upload Media (only if a new file is selected)
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('title', title);
                 formData.append('status', 'publish');
-
                 const mediaResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/media`, {
                     method: 'POST',
                     headers: { 'Authorization': authHeader },
                     body: formData,
                 });
-
-                if (!mediaResponse.ok) {
-                    const errorData = await mediaResponse.json();
-                    throw new Error(errorData.message || 'Media upload failed');
-                }
-
+                if (!mediaResponse.ok) throw new Error('Media upload failed');
                 const mediaData = await mediaResponse.json();
                 mediaId = mediaData.id;
                 setUploadProgress(60);
             }
 
-            // 2. Create or Update Post
             const meta = { location, status, type: postType, category: projectCategory };
             const metaContent = `<!-- PROJECT_META: ${JSON.stringify(meta)} -->\n${description}`;
 
-            // UNIFIED OVERRIDE for Updates: Uses POST + _method=PUT to bypass security plugins
-            const url = editId ? `${CMS_URL}/wp-json/wp/v2/posts/${editId}?_method=PUT` : `${CMS_URL}/wp-json/wp/v2/posts`;
-            const method = 'POST'; // Always POST, the _method param does the magic
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-                'Authorization': authHeader,
-            };
+            // Check if we use ?_method=PUT for updates
+            const url = editId ? `${CMS_URL}/wp-json/wp/v2/posts/${editId}` : `${CMS_URL}/wp-json/wp/v2/posts`;
+            const method = editId ? 'POST' : 'POST';
+            const finalUrl = editId ? `${url}?_method=PUT` : url;
 
-            if (editId) {
-                headers['X-HTTP-Method-Override'] = 'PUT';
-            }
-
-            const postResponse = await fetch(url, {
-                method: method,
-                headers: headers,
+            const postResponse = await fetch(finalUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader,
+                },
                 body: JSON.stringify({
                     title: title,
                     content: metaContent,
@@ -205,27 +158,45 @@ const Admin = () => {
 
             if (!postResponse.ok) {
                 const errorData = await postResponse.json();
-                throw new Error(errorData.message || 'Saving failed');
+                throw new Error(errorData.message || 'Failed to save post');
             }
 
             setUploadProgress(100);
-            setIsLoading(false);
-            toast({
-                title: editId ? "Updated! ✨" : "Success! 🎉",
-                description: editId ? "Your changes have been saved." : "Your update has been published.",
-            });
-
+            toast({ title: editId ? "Updated!" : "Published!", description: "Changes are live." });
             cancelEdit();
             refetch();
         } catch (error) {
-            console.error(error);
-            toast({
-                title: "Operation Failed",
-                description: error instanceof Error ? error.message : "Possible connection error.",
-                variant: "destructive",
-            });
+            toast({ title: "Error", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
+        } finally {
             setIsLoading(false);
+            setUploadProgress(0);
         }
+    };
+
+    const startEdit = (post: any) => {
+        setEditId(post.id);
+        setTitle(post.title.rendered);
+        setExistingMediaId(post.featured_media);
+        const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
+        if (metaMatch) {
+            try {
+                const meta = JSON.parse(metaMatch[1]);
+                setDescription(post.content.rendered.replace(/<!-- PROJECT_META: .* -->\s*/, '').trim());
+                setPostType(meta.type || 'gallery');
+                setLocation(meta.location || '');
+                setStatus(meta.status || 'Ongoing');
+                setProjectCategory(meta.category || 'Bridges');
+            } catch (e) { }
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditId(null);
+        setTitle('');
+        setDescription('');
+        setFile(null);
+        setExistingMediaId(null);
     };
 
     if (!isLoggedIn) {
@@ -233,28 +204,14 @@ const Admin = () => {
             <div className="min-h-screen flex items-center justify-center bg-grey-lighter px-4">
                 <Card className="w-full max-w-md">
                     <CardHeader className="text-center">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Lock className="text-primary w-6 h-6" />
-                        </div>
-                        <CardTitle className="text-2xl font-bold">Client Admin</CardTitle>
-                        <CardDescription>Enter your password to manage updates</CardDescription>
+                        <Lock className="w-12 h-12 text-primary mx-auto mb-4" />
+                        <CardTitle>Client Admin</CardTitle>
+                        <CardDescription>Secure Dashboard Access</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
-                            <Button type="submit" className="w-full btn-primary h-11">
-                                Login
-                            </Button>
+                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+                            <Button type="submit" className="w-full">Login</Button>
                         </form>
                     </CardContent>
                 </Card>
@@ -266,248 +223,88 @@ const Admin = () => {
         <div className="min-h-screen bg-grey-lighter py-12 px-4">
             <div className="container max-w-2xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">Weekly Updates</h1>
-                        <p className="text-muted-foreground mt-1">Post new images or videos to your gallery</p>
+                    <h1 className="text-3xl font-bold">Admin Portal</h1>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={runDiagnostics}>
+                            <ShieldCheck className="w-4 h-4 mr-1" /> Check Perms
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setIsLoggedIn(false)}>
+                            <LogOut className="w-4 h-4 mr-1" /> Logout
+                        </Button>
                     </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => setIsLoggedIn(false)}
-                        className="flex items-center gap-2"
-                    >
-                        <LogOut className="w-4 h-4" /> Logout
-                    </Button>
                 </div>
 
-                <Card className="border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
-                    <div className="h-2 bg-primary w-full" />
+                {diagInfo && (
+                    <Card className="mb-6 border-blue-200 bg-blue-50">
+                        <CardContent className="pt-4 py-4">
+                            <pre className="text-xs text-blue-800 whitespace-pre-wrap">{diagInfo}</pre>
+                            <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-blue-600" onClick={() => setDiagInfo(null)}>Close Info</Button>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <Card className="mb-12 shadow-xl border-none">
                     <CardHeader>
-                        <CardTitle>Create New Update</CardTitle>
-                        <CardDescription>Fill out the fields below to publish a new post</CardDescription>
+                        <CardTitle>{editId ? 'Editing Post' : 'New Update'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleUpload} className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Post Type</Label>
-                                    <div className="flex bg-grey-lighter p-1 rounded-lg">
-                                        <button
-                                            type="button"
-                                            onClick={() => setPostType('gallery')}
-                                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${postType === 'gallery' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-                                        >
-                                            Gallery Update
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setPostType('project')}
-                                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${postType === 'project' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-                                        >
-                                            Full Project
-                                        </button>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground/80 mt-1 pl-1 italic">
-                                        {postType === 'gallery'
-                                            ? "★ Appears in 'Gallery' page as a weekly construction update."
-                                            : "★ Appears in 'Projects' page as a permanent portfolio item."}
-                                    </p>
+                                    <Label>Type</Label>
+                                    <select className="w-full border rounded-md h-10 px-2" value={postType} onChange={(e) => setPostType(e.target.value as any)}>
+                                        <option value="gallery">Gallery Update</option>
+                                        <option value="project">Full Project</option>
+                                    </select>
                                 </div>
-
                                 <div className="space-y-2">
-                                    <Label htmlFor="title">Update Title</Label>
-                                    <Input
-                                        id="title"
-                                        placeholder="e.g., Bridge Construction Progress"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        required
-                                    />
+                                    <Label>Title</Label>
+                                    <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
                                 </div>
                             </div>
 
                             {postType === 'project' && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="location">Project Location</Label>
-                                            <Input
-                                                id="location"
-                                                placeholder="e.g., Balasore, Odisha"
-                                                value={location}
-                                                onChange={(e) => setLocation(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="item-status">Project Status</Label>
-                                            <select
-                                                id="item-status"
-                                                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm cursor-pointer"
-                                                value={status}
-                                                onChange={(e) => setStatus(e.target.value as 'Ongoing' | 'Completed')}
-                                            >
-                                                <option value="Ongoing">Ongoing</option>
-                                                <option value="Completed">Completed</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="project-category">Project Category</Label>
-                                        <select
-                                            id="project-category"
-                                            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm cursor-pointer"
-                                            value={projectCategory}
-                                            onChange={(e) => setProjectCategory(e.target.value)}
-                                        >
-                                            <option value="Bridges">Bridges</option>
-                                            <option value="Roads">Roads</option>
-                                            <option value="Buildings">Buildings</option>
-                                        </select>
-                                    </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                                    <select className="border rounded-md px-2" value={status} onChange={(e) => setStatus(e.target.value as any)}>
+                                        <option value="Ongoing">Ongoing</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
                                 </div>
                             )}
 
-                            <div className="space-y-2">
-                                <Label htmlFor="desc">Description</Label>
-                                <Textarea
-                                    id="desc"
-                                    placeholder="Tell your clients what happened this week..."
-                                    className="min-h-[120px]"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                />
+                            <Textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+
+                            <div className="border-2 border-dashed p-8 text-center rounded-xl bg-grey-lighter/30" onClick={() => document.getElementById('file-upload')?.click()}>
+                                <input type="file" id="file-upload" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                                {file ? <p className="text-primary font-medium">{file.name}</p> : <div className="flex flex-col items-center"><Upload className="w-8 h-8 text-primary mb-2" /><p className="text-sm text-muted-foreground italic">Click to upload media</p></div>}
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Upload Media (Image or Video)</Label>
-                                <div
-                                    className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-grey-lighter/50"
-                                    onClick={() => document.getElementById('file-upload')?.click()}
-                                >
-                                    <input
-                                        type="file"
-                                        id="file-upload"
-                                        className="hidden"
-                                        accept="image/*,video/*"
-                                        onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                    />
-                                    {file ? (
-                                        <div className="flex flex-col items-center">
-                                            <CheckCircle2 className="w-10 h-10 text-primary mb-2" />
-                                            <p className="font-medium text-foreground">{file.name}</p>
-                                            <Button variant="ghost" size="sm" className="mt-2" onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFile(null);
-                                            }}>Change File</Button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                                                <Upload className="text-primary w-6 h-6" />
-                                            </div>
-                                            <p className="text-muted-foreground">
-                                                <span className="text-primary font-semibold">Click to upload</span> or drag and drop
-                                            </p>
-                                            <p className="text-xs text-muted-foreground/60 mt-2">
-                                                Max file size: 50MB
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full btn-primary h-12 text-base font-bold"
-                                disabled={isLoading || !file || !title}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        {editId ? 'Saving Changes...' : 'Publishing...'}
-                                    </>
-                                ) : (
-                                    editId ? 'Save Changes' : 'Publish Update'
-                                )}
+                            <Button type="submit" className="w-full text-lg font-bold h-12" disabled={isLoading}>
+                                {isLoading ? <Loader2 className="animate-spin mr-2" /> : (editId ? 'Update Post' : 'Publish Post')}
                             </Button>
-
-                            {editId && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full h-12 mt-2"
-                                    onClick={cancelEdit}
-                                    disabled={isLoading}
-                                >
-                                    Cancel & Go Back
-                                </Button>
-                            )}
+                            {editId && <Button variant="ghost" className="w-full" onClick={cancelEdit}>Cancel Edit</Button>}
                         </form>
                     </CardContent>
                 </Card>
 
-                {/* Recent Activity Section */}
-                <div className="mt-12">
-                    <div className="flex items-center gap-2 mb-4">
-                        <History className="w-5 h-5 text-primary" />
-                        <h2 className="text-xl font-bold">Recent Activity</h2>
-                    </div>
-                    <div className="space-y-3">
-                        {recentPosts?.map((post: any) => {
-                            const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
-                            let metaType = 'gallery';
-                            if (metaMatch) {
-                                try { metaType = JSON.parse(metaMatch[1]).type; } catch (e) { }
-                            }
-
-                            return (
-                                <div key={post.id} className="bg-white p-4 rounded-xl border border-border flex items-center justify-between shadow-sm">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-grey-lighter">
-                                            <img
-                                                src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg'}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground line-clamp-1" dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-                                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${metaType === 'project' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                                                {metaType === 'project' ? 'Project' : 'Gallery Update'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => startEdit(post)}
-                                            className="p-2 hover:bg-blue-100 hover:text-blue-600 rounded-full transition-colors text-muted-foreground"
-                                            title="Edit Post"
-                                        >
-                                            <PencilLine className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(post.id)}
-                                            className="p-2 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors text-muted-foreground"
-                                            title="Delete Post"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                        <a
-                                            href={metaType === 'project' ? '/projects' : '/gallery'}
-                                            target="_blank"
-                                            className="p-2 hover:bg-grey-lighter rounded-full transition-colors"
-                                        >
-                                            <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
-                                        </a>
-                                    </div>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2"><History className="text-primary" /><h2 className="font-bold text-xl">Recent Activity</h2></div>
+                    {recentPosts?.map((post: any) => (
+                        <div key={post.id} className="bg-white p-4 rounded-xl shadow-sm border flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg'} className="w-12 h-12 object-cover rounded" />
+                                <div>
+                                    <p className="font-bold line-clamp-1" dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+                                    <span className="text-[10px] bg-grey-lighter px-2 py-0.5 rounded-full uppercase font-bold text-muted-foreground">Post ID: {post.id}</span>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                <div className="mt-8 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    Connected to {CMS_URL}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button size="icon" variant="ghost" onClick={() => startEdit(post)}><PencilLine className="w-4 h-4" /></Button>
+                                <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleDelete(post.id)}><Trash2 className="w-4 h-4" /></Button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
