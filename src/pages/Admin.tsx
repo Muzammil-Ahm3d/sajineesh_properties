@@ -60,17 +60,25 @@ const Admin = () => {
         setIsLoading(true);
         try {
             const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}`, {
+            // Adding force=true is often required to bypass trash and permanently remove
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?force=true`, {
                 method: 'DELETE',
                 headers: { 'Authorization': authHeader }
             });
 
-            if (!response.ok) throw new Error('Delete failed');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Delete failed');
+            }
 
             toast({ title: "Deleted", description: "Post removed successfully." });
             refetch();
         } catch (error) {
-            toast({ title: "Error", description: "Failed to delete post.", variant: "destructive" });
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Failed to delete post.",
+                variant: "destructive"
+            });
         } finally {
             setIsLoading(false);
         }
