@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon, Trash2, PencilLine, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon, Trash2, PencilLine, ShieldCheck, AlertTriangle, Bug } from 'lucide-react';
 import { CMS_URL } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 
@@ -77,8 +77,7 @@ const Admin = () => {
                 message += `✅ SUCCESS: Account is an Administrator.\n\n`;
             }
 
-            message += `SERVER INFO:\n- Site: ${apiData.name}\n- API Level: ${apiData.namespaces?.includes('wp/v2') ? 'v2 Ready' : 'v2 Missing'}\n\n`;
-            message += `ACTION REQUIRED:\nIf you see 'undefined' or 'No roles found', please ask your IT/WordPress manager to ensure this specific email is set to the 'Administrator' role.`;
+            message += `SERVER INFO:\n- Site: ${apiData.name}\n- API Level: ${apiData.namespaces?.includes('wp/v2') ? 'v2 Ready' : 'v2 Missing'}`;
 
             setDiagInfo(message);
         } catch (e) {
@@ -88,29 +87,47 @@ const Admin = () => {
         }
     };
 
+    // Helper to extract WP error message
+    const getErrorMessage = async (response: Response) => {
+        try {
+            const data = await response.json();
+            return `WP Error: ${data.code} - ${data.message}`;
+        } catch (e) {
+            return `HTTP Error: ${response.status} ${response.statusText}`;
+        }
+    };
+
     const handleDelete = async (id: number) => {
         if (!window.confirm("Are you sure you want to delete this post?")) return;
         setIsLoading(true);
-        try {
-            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+        const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
 
-            // Most compatible way: POST with _method override
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=DELETE`, {
+        try {
+            // Attempt 1: Force Delete via Method Override
+            // We use ?force=true to skip Trash (which sometimes fails on restrictive servers)
+            console.log("Attempting Force Delete...");
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?_method=DELETE&force=true`, {
                 method: 'POST',
                 headers: { 'Authorization': authHeader }
             });
 
             if (response.ok) {
-                toast({ title: "Success", description: "Post removed from site." });
+                toast({ title: "Deleted", description: "Post permanently removed." });
                 refetch();
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Server rejected deletion');
+                return;
             }
+
+            // If failed, throw error with details
+            const errorMsg = await getErrorMessage(response);
+            throw new Error(errorMsg);
+
         } catch (error) {
+            console.error("Delete failed", error);
+            // Show the raw error to the user for debugging
+            setDiagInfo(`DELETE FAILED:\n${error instanceof Error ? error.message : 'Unknown Error'}\n\nTry checking 'Force Delete' permissions.`);
             toast({
                 title: "Delete Failed",
-                description: error instanceof Error ? error.message : "Error",
+                description: "Check the blue diagnostic box for the exact error code.",
                 variant: "destructive"
             });
         } finally {
@@ -124,12 +141,12 @@ const Admin = () => {
 
         setIsLoading(true);
         setUploadProgress(10);
+        const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
 
         try {
-            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
             let mediaId = existingMediaId;
 
-            // Media upload
+            // Media upload (Collection POST) - Usually works
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
@@ -140,7 +157,12 @@ const Admin = () => {
                     headers: { 'Authorization': authHeader },
                     body: formData,
                 });
-                if (!mediaResponse.ok) throw new Error('Media upload failed');
+
+                if (!mediaResponse.ok) {
+                    const errorMsg = await getErrorMessage(mediaResponse);
+                    throw new Error(`Media Upload: ${errorMsg}`);
+                }
+
                 const mediaData = await mediaResponse.json();
                 mediaId = mediaData.id;
                 setUploadProgress(60);
@@ -149,34 +171,67 @@ const Admin = () => {
             const meta = { location, status, type: postType, category: projectCategory };
             const metaContent = `<!-- PROJECT_META: ${JSON.stringify(meta)} -->\n${description}`;
 
-            // Official WP API: POST to the ID url is the correct way to Update!
-            const url = editId ? `${CMS_URL}/wp-json/wp/v2/posts/${editId}` : `${CMS_URL}/wp-json/wp/v2/posts`;
+            const payload = {
+                title: title,
+                content: metaContent,
+                status: 'publish',
+                featured_media: mediaId,
+            };
 
-            const postResponse = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authHeader,
-                },
-                body: JSON.stringify({
-                    title: title,
-                    content: metaContent,
-                    status: 'publish',
-                    featured_media: mediaId,
-                }),
-            });
+            let postResponse;
+
+            if (editId) {
+                // UPDATE STRATEGY:
+                // Attempt 1: POST to ID (Standard)
+                console.log("Attempting Update (Method 1: POST)...");
+                postResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${editId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                // Attempt 2: If Method 1 fails appropriately, try PATCH
+                if (!postResponse.ok && postResponse.status === 405 || postResponse.status === 501) { // Method Not Allowed or Not Implemented
+                    console.log("Method 1 failed, trying Method 2 (PATCH)...");
+                    postResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${editId}?_method=PATCH`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': authHeader,
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                }
+            } else {
+                // CREATE (Standard)
+                postResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader,
+                    },
+                    body: JSON.stringify(payload),
+                });
+            }
 
             if (!postResponse.ok) {
-                const errorData = await postResponse.json();
-                throw new Error(errorData.message || 'Failed to save post');
+                const errorMsg = await getErrorMessage(postResponse);
+                throw new Error(errorMsg);
             }
 
             setUploadProgress(100);
             toast({ title: editId ? "Updated!" : "Published!", description: "Changes are live." });
             cancelEdit();
             refetch();
+            setDiagInfo(null); // Clear errors on success
+
         } catch (error) {
-            toast({ title: "Error", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
+            console.error("Save failed", error);
+            setDiagInfo(`SAVE FAILED:\n${error instanceof Error ? error.message : 'Unknown Error'}\n\nPlease screenshot this and send it to support.`);
+            toast({ title: "Operation Failed", description: "See details in the blue box.", variant: "destructive" });
         } finally {
             setIsLoading(false);
             setUploadProgress(0);
@@ -207,6 +262,7 @@ const Admin = () => {
         setTitle('');
         setDescription('');
         setFile(null);
+        setDiagInfo(null);
     };
 
     if (!isLoggedIn) {
@@ -248,9 +304,10 @@ const Admin = () => {
                     <Card className="mb-6 border-blue-200 bg-blue-50/80 backdrop-blur shadow-sm animate-in fade-in slide-in-from-top-4">
                         <CardContent className="pt-4 py-4">
                             <div className="flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                                <Bug className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
                                 <div className="space-y-2 flex-grow">
-                                    <pre className="text-xs text-blue-800 whitespace-pre-wrap font-mono leading-relaxed">{diagInfo}</pre>
+                                    <h4 className="font-bold text-blue-800 text-sm">Diagnostic Result</h4>
+                                    <pre className="text-xs text-blue-800 whitespace-pre-wrap font-mono leading-relaxed bg-blue-100 p-2 rounded">{diagInfo}</pre>
                                     <Button variant="link" size="sm" className="p-0 h-auto text-blue-600 underline" onClick={() => setDiagInfo(null)}>Close Diagnostic Result</Button>
                                 </div>
                             </div>
