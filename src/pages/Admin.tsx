@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon } from 'lucide-react';
+import { Loader2, Upload, Lock, LogOut, CheckCircle2, History, ExternalLink as ExternalLinkIcon, Trash2, PencilLine, X as CloseIcon } from 'lucide-react';
 import { CMS_URL, API_URL } from '@/config';
 import { useQuery } from '@tanstack/react-query';
 
@@ -24,6 +24,8 @@ const Admin = () => {
     const [projectCategory, setProjectCategory] = useState('Bridges');
     const [file, setFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [editId, setEditId] = useState<number | null>(null);
+    const [existingMediaId, setExistingMediaId] = useState<number | null>(null);
 
     // Fetch latest posts to display in admin
     const { data: recentPosts, refetch } = useQuery({
@@ -52,55 +54,103 @@ const Admin = () => {
         }
     };
 
+    const handleDelete = async (id: number) => {
+        if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+        setIsLoading(true);
+        try {
+            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': authHeader }
+            });
+
+            if (!response.ok) throw new Error('Delete failed');
+
+            toast({ title: "Deleted", description: "Post removed successfully." });
+            refetch();
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to delete post.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const startEdit = (post: any) => {
+        setEditId(post.id);
+        setTitle(post.title.rendered);
+        setExistingMediaId(post.featured_media);
+
+        // Parse meta
+        const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
+        if (metaMatch) {
+            try {
+                const meta = JSON.parse(metaMatch[1]);
+                setDescription(post.content.rendered.replace(/<!-- PROJECT_META: .* -->\s*/, '').trim());
+                setPostType(meta.type || 'gallery');
+                setLocation(meta.location || '');
+                setStatus(meta.status || 'Ongoing');
+                setProjectCategory(meta.category || 'Bridges');
+            } catch (e) { }
+        } else {
+            setDescription('');
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditId(null);
+        setExistingMediaId(null);
+        setTitle('');
+        setDescription('');
+        setLocation('');
+        setFile(null);
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!file || !title) return;
+        if (!title || (!file && !editId)) return;
 
         setIsLoading(true);
         setUploadProgress(10);
 
         try {
-            // 1. Upload Media
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('title', title);
-            formData.append('status', 'publish');
-
-            // Securely encode credentials for the WordPress API
             const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+            let mediaId = existingMediaId;
 
-            const mediaResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/media`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': authHeader,
-                },
-                body: formData,
-            });
+            // 1. Upload Media (only if a new file is selected)
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('title', title);
+                formData.append('status', 'publish');
 
-            if (!mediaResponse.ok) {
-                const errorData = await mediaResponse.json();
-                throw new Error(errorData.message || 'Media upload failed');
+                const mediaResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/media`, {
+                    method: 'POST',
+                    headers: { 'Authorization': authHeader },
+                    body: formData,
+                });
+
+                if (!mediaResponse.ok) {
+                    const errorData = await mediaResponse.json();
+                    throw new Error(errorData.message || 'Media upload failed');
+                }
+
+                const mediaData = await mediaResponse.json();
+                mediaId = mediaData.id;
+                setUploadProgress(60);
             }
 
-            const media = await mediaResponse.json();
-            setUploadProgress(60);
+            // 2. Create or Update Post
+            const meta = { location, status, type: postType, category: projectCategory };
+            const metaContent = `<!-- PROJECT_META: ${JSON.stringify(meta)} -->\n${description}`;
 
-            // 2. Create Post with metadata
-            // We'll store metadata in a hidden HTML comment for easy parsing
-            const meta = {
-                location,
-                status,
-                type: postType,
-                category: projectCategory
-            };
+            const url = editId ? `${CMS_URL}/wp-json/wp/v2/posts/${editId}` : `${CMS_URL}/wp-json/wp/v2/posts`;
+            const method = editId ? 'PUT' : 'POST';
 
-            const metaContent = `
-<!-- PROJECT_META: ${JSON.stringify(meta)} -->
-${description}
-`;
-
-            const postResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/posts`, {
-                method: 'POST',
+            const postResponse = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': authHeader,
@@ -109,31 +159,28 @@ ${description}
                     title: title,
                     content: metaContent,
                     status: 'publish',
-                    featured_media: media.id,
+                    featured_media: mediaId,
                 }),
             });
 
             if (!postResponse.ok) {
                 const errorData = await postResponse.json();
-                throw new Error(errorData.message || 'Post creation failed');
+                throw new Error(errorData.message || 'Saving failed');
             }
 
             setUploadProgress(100);
             setIsLoading(false);
             toast({
-                title: "Success! 🎉",
-                description: "Your update has been published to the Gallery.",
+                title: editId ? "Updated! ✨" : "Success! 🎉",
+                description: editId ? "Your changes have been saved." : "Your update has been published.",
             });
-            setTitle('');
-            setDescription('');
-            setLocation('');
-            setFile(null);
-            refetch(); // Refresh the list
 
+            cancelEdit();
+            refetch();
         } catch (error) {
             console.error(error);
             toast({
-                title: "Upload Failed",
+                title: "Operation Failed",
                 description: error instanceof Error ? error.message : "Possible connection error.",
                 variant: "destructive",
             });
@@ -337,12 +384,24 @@ ${description}
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Publishing...
+                                        {editId ? 'Saving Changes...' : 'Publishing...'}
                                     </>
                                 ) : (
-                                    'Publish Update'
+                                    editId ? 'Save Changes' : 'Publish Update'
                                 )}
                             </Button>
+
+                            {editId && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full h-12 mt-2"
+                                    onClick={cancelEdit}
+                                    disabled={isLoading}
+                                >
+                                    Cancel & Go Back
+                                </Button>
+                            )}
                         </form>
                     </CardContent>
                 </Card>
@@ -377,13 +436,29 @@ ${description}
                                             </span>
                                         </div>
                                     </div>
-                                    <a
-                                        href={metaType === 'project' ? '/projects' : '/gallery'}
-                                        target="_blank"
-                                        className="p-2 hover:bg-grey-lighter rounded-full transition-colors"
-                                    >
-                                        <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
-                                    </a>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => startEdit(post)}
+                                            className="p-2 hover:bg-blue-100 hover:text-blue-600 rounded-full transition-colors text-muted-foreground"
+                                            title="Edit Post"
+                                        >
+                                            <PencilLine className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(post.id)}
+                                            className="p-2 hover:bg-red-100 hover:text-red-600 rounded-full transition-colors text-muted-foreground"
+                                            title="Delete Post"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <a
+                                            href={metaType === 'project' ? '/projects' : '/gallery'}
+                                            target="_blank"
+                                            className="p-2 hover:bg-grey-lighter rounded-full transition-colors"
+                                        >
+                                            <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
+                                        </a>
+                                    </div>
                                 </div>
                             );
                         })}
