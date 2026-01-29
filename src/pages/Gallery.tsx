@@ -142,7 +142,7 @@ const Gallery = () => {
                             <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl text-center">
                                 <p className="font-semibold">
                                     {error instanceof Error && error.message === 'UNAUTHORIZED_API'
-                                        ? "Action Required: WordPress API is protected. Please uncheck 'wp/v2/posts' in miniOrange settings."
+                                        ? "Access Denied (401). Please go to plugins -> 'Enable CORS' -> Settings and ensure it is ON."
                                         : "Could not load the latest updates. Showing archived projects."
                                     }
                                 </p>
