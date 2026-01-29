@@ -52,6 +52,35 @@ const Admin = () => {
         }
     };
 
+    // Diagnostic: Check if we are really admin
+    const checkConnection = async () => {
+        try {
+            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + ')wOaQz$eFCz6tSWU75G$JybU');
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/users/me`, {
+                headers: {
+                    'Authorization': authHeader
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                toast({
+                    title: "Connection Healthy",
+                    description: `Logged in as: ${data.name} (ID: ${data.id})`,
+                });
+            } else {
+                console.error("Auth Check Failed", response.status, await response.text());
+                toast({
+                    variant: "destructive",
+                    title: "Connection Issue",
+                    description: "Server is blocking the password. You likely need to fix .htaccess",
+                });
+            }
+        } catch (e) {
+            console.error("Connection Check Error", e);
+        }
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file || !title) return;
@@ -67,7 +96,7 @@ const Admin = () => {
             formData.append('status', 'publish');
 
             // Securely encode credentials for the WordPress API
-            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + ')wOaQz$eFCz6tSWU75G$JybU');
 
             const mediaResponse = await fetch(`${CMS_URL}/wp-json/wp/v2/media`, {
                 method: 'POST',
@@ -79,7 +108,12 @@ const Admin = () => {
 
             if (!mediaResponse.ok) {
                 const errorData = await mediaResponse.json();
-                throw new Error(errorData.message || 'Media upload failed');
+                // Specific handling for the "rest_cannot_create" / Header Stripping issue
+                if (errorData.code === 'rest_cannot_create') {
+                    throw new Error("Your server (Hostinger) is stripping the password header. You need to edit .htaccess file to allow Authorization headers.");
+                } else {
+                    throw new Error(errorData.message || 'Media upload failed');
+                }
             }
 
             const media = await mediaResponse.json();
@@ -346,49 +380,6 @@ ${description}
                         </form>
                     </CardContent>
                 </Card>
-
-                {/* Recent Activity Section */}
-                <div className="mt-12">
-                    <div className="flex items-center gap-2 mb-4">
-                        <History className="w-5 h-5 text-primary" />
-                        <h2 className="text-xl font-bold">Recent Activity</h2>
-                    </div>
-                    <div className="space-y-3">
-                        {recentPosts?.map((post: any) => {
-                            const metaMatch = post.content.rendered.match(/<!-- PROJECT_META: (.*) -->/);
-                            let metaType = 'gallery';
-                            if (metaMatch) {
-                                try { metaType = JSON.parse(metaMatch[1]).type; } catch (e) { }
-                            }
-
-                            return (
-                                <div key={post.id} className="bg-white p-4 rounded-xl border border-border flex items-center justify-between shadow-sm">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-grey-lighter">
-                                            <img
-                                                src={post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/placeholder.svg'}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground line-clamp-1" dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
-                                            <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${metaType === 'project' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                                                {metaType === 'project' ? 'Project' : 'Gallery Update'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <a
-                                        href={metaType === 'project' ? '/projects' : '/gallery'}
-                                        target="_blank"
-                                        className="p-2 hover:bg-grey-lighter rounded-full transition-colors"
-                                    >
-                                        <ExternalLinkIcon className="w-4 h-4 text-muted-foreground" />
-                                    </a>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
 
                 <div className="mt-8 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
