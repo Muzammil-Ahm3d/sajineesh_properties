@@ -15,6 +15,7 @@ const Admin = () => {
     // State for credentials
     const [username, setUsername] = useState('sajineeshconstructions@gmail.com');
     const [appPassword, setAppPassword] = useState('');
+    const [authToken, setAuthToken] = useState<string | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
@@ -36,6 +37,7 @@ const Admin = () => {
 
     // Helper: Dynamic Auth Header
     const getAuthHeader = () => {
+        if (authToken) return `Bearer ${authToken}`;
         return 'Basic ' + btoa(username + ':' + appPassword);
     };
 
@@ -58,8 +60,29 @@ const Admin = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        // Verify credentials by checking user info
+        setAuthToken(null);
+
         try {
+            // STRATEGY 1: Check for JWT Plugin (Best for bypassing Hostinger/Server blocks)
+            const jwtRes = await fetch(`${CMS_URL}/wp-json/jwt-auth/v1/token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: appPassword })
+            });
+
+            if (jwtRes.ok) {
+                const jwtData = await jwtRes.json();
+                if (jwtData.token) {
+                    setAuthToken(jwtData.token);
+                    setIsLoggedIn(true);
+                    toast({ title: "Secure Login", description: "Connected via JWT Token (Best Connection)." });
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            // STRATEGY 2: Fallback to Basic Auth (Application Passwords)
+            console.log("JWT failed, trying Basic Auth...");
             const response = await fetch(`${CMS_URL}/wp-json/wp/v2/users/me`, {
                 headers: { 'Authorization': 'Basic ' + btoa(username + ':' + appPassword) }
             });
@@ -68,13 +91,13 @@ const Admin = () => {
                 const data = await response.json();
                 if (data.roles?.includes('administrator')) {
                     setIsLoggedIn(true);
-                    toast({ title: "Connected!", description: `Logged in as ${data.name}` });
+                    toast({ title: "Connected!", description: `Logged in as ${data.name} (Basic Auth)` });
                 } else {
                     toast({ title: "Warning", description: "Login worked, but account is not an Admin.", variant: "destructive" });
-                    setIsLoggedIn(true); // Let them in anyway to debug
+                    setIsLoggedIn(true);
                 }
             } else {
-                toast({ title: "Login Failed", description: "Invalidd Email or Application Password.", variant: "destructive" });
+                toast({ title: "Login Failed", description: "Invalid Credentials or Server blocked access.", variant: "destructive" });
             }
         } catch (e) {
             toast({ title: "Connection Error", description: "Could not reach WordPress.", variant: "destructive" });
@@ -87,7 +110,7 @@ const Admin = () => {
         setIsLoading(true);
         setDiagInfo("Running checks...");
         try {
-            const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+            const authHeader = getAuthHeader();
 
             // 1. Check User Identity
             const userRes = await fetch(`${CMS_URL}/wp-json/wp/v2/users/me?context=edit`, {
@@ -134,7 +157,7 @@ const Admin = () => {
     const handleDelete = async (id: number) => {
         if (!window.confirm("Are you sure you want to delete this post?")) return;
         setIsLoading(true);
-        const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+        const authHeader = getAuthHeader();
 
         try {
             // Attempt 1: Force Delete via Method Override
@@ -193,7 +216,7 @@ const Admin = () => {
 
         setIsLoading(true);
         setUploadProgress(10);
-        const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
+        const authHeader = getAuthHeader();
 
         try {
             let mediaId = existingMediaId;
