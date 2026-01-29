@@ -220,7 +220,7 @@ const Admin = () => {
     }
 
     return (
-        <div className="min-h-screen bg-grey-lighter py-12 px-4">
+        <div className="min-h-screen bg-grey-lighter pt-32 pb-12 px-4">
             <div className="container max-w-2xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold">Admin Portal</h1>
