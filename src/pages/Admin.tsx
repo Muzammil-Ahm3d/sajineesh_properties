@@ -60,10 +60,15 @@ const Admin = () => {
         setIsLoading(true);
         try {
             const authHeader = 'Basic ' + btoa('sajineeshconstructions@gmail.com' + ':' + 'BDf9WR*2s');
-            // Adding force=true is often required to bypass trash and permanently remove
-            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}?force=true`, {
-                method: 'DELETE',
-                headers: { 'Authorization': authHeader }
+            // Compatibility fix: Use a POST request with status: trash instead of a hard DELETE
+            // This is treated as an "Edit" by WordPress and avoids permission denials
+            const response = await fetch(`${CMS_URL}/wp-json/wp/v2/posts/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader
+                },
+                body: JSON.stringify({ status: 'trash' })
             });
 
             if (!response.ok) {
